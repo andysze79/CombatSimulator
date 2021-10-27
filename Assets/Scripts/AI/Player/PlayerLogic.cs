@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
+using System.Linq;
 
 public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
 {
@@ -39,6 +40,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     private const float _threshold = 0.01f;
     private float _cinemachineTargetYaw;
     private float _cinemachineTargetPitch;
+    public List<Collider> CurrentEnemies = new List<Collider>();
     Coroutine LockOnProcess { get; set; }
     private void Update()
     {
@@ -507,7 +509,78 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
 
     #region Attack Assistance
     private Collider SearchTarget() {
-        return null;        
+        var result = Physics.OverlapSphere(
+            referenceKeeper.PlayerData.CharacterController.transform.position, 
+            referenceKeeper.PlayerData.SearchRadius,
+            referenceKeeper.PlayerData.SearchLayer);
+               
+        if (result.Length != 0)
+        {
+            targetCollider = OrderByFacingDegree(result);
+        }
+        else {
+            targetCollider = null;
+        }
+
+        return targetCollider;
+    }
+    /// <summary>
+    /// This func will arrange the targets and return the closet target
+    /// </summary>
+    /// <param name="targets"></param>
+    /// <returns></returns>
+    private Collider OrderByDistance(Collider[] targets) {
+        if (targets.Length == 0) return null;
+        
+        Dictionary<Collider,float> Dist = new Dictionary<Collider, float>();
+        var playerPos = referenceKeeper.PlayerData.CharacterController.transform.position;
+        
+        for (int i = 0; i < targets.Length; i++)
+        {
+            Dist.Add(targets[i],Vector3.Distance(playerPos, targets[i].transform.position));
+        }
+        
+        var newResult = Dist.OrderBy(x => x.Value);
+
+        CurrentEnemies.Clear();
+
+        foreach (var kvp in newResult)
+        {
+            CurrentEnemies.Add(kvp.Key);
+        }
+
+        return CurrentEnemies[0];        
+    }
+    /// <summary>
+    /// This func will arrange the targets and return the closet target
+    /// </summary>
+    /// <param name="targets"></param>
+    /// <returns></returns>
+    private Collider OrderByFacingDegree(Collider[] targets)
+    {
+        if (targets.Length == 0) return null;
+
+        Dictionary<Collider, float> Dist = new Dictionary<Collider, float>();
+        var playerPos = referenceKeeper.PlayerData.CharacterController.transform.position;
+        var playerFacing = referenceKeeper.PlayerData._3rdPersonCamera.transform.forward;        
+        Vector3 dir;
+
+        for (int i = 0; i < targets.Length; i++)
+        {
+            dir = (targets[i].transform.position - playerPos).normalized;
+            Dist.Add(targets[i], Vector3.Angle(playerFacing, dir));
+        }
+
+        var newResult = Dist.OrderBy(x => x.Value);
+
+        CurrentEnemies.Clear();
+
+        foreach (var kvp in newResult)
+        {
+            CurrentEnemies.Add(kvp.Key);
+        }
+
+        return CurrentEnemies[0];
     }
     private void ActivateLockOnTarget()
     {
@@ -517,7 +590,10 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     {
         UserControllerGetter.Instance.LockOnUpDelegate -= LockOnTarget;
     }
-    private void LockOnTarget() {        
+    private void LockOnTarget() {
+
+        if (SearchTarget() == null) return;
+
         if (!referenceKeeper.PlayerData.m_LockOn)
         {          
             referenceKeeper.PlayerData.m_LockOn = true;
@@ -553,12 +629,25 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     }
     private IEnumerator LockOnTarget(Transform target) {
         Vector3 dir;
+        Quaternion targetRot;
+        float step = 0;
 
+        while (step < 1)
+        {
+            dir = targetCollider.transform.position - new Vector3(target.position.x, target.position.y - referenceKeeper.PlayerData.LockOnPitchOffset, target.position.z);
+            dir = dir.normalized;
+
+            targetRot = Quaternion.LookRotation(dir);
+            step += Time.deltaTime;
+            referenceKeeper.PlayerData.CinemachineCameraTarget.transform.rotation = Quaternion.Slerp(referenceKeeper.PlayerData.CinemachineCameraTarget.transform.rotation, targetRot, step);
+
+            yield return null;
+        }        
+        
         while (true)
         {            
             dir = targetCollider.transform.position - new Vector3(target.position.x, target.position.y - referenceKeeper.PlayerData.LockOnPitchOffset, target.position.z);
-            dir = dir.normalized;
-            
+            dir = dir.normalized;          
 
             referenceKeeper.PlayerData.CinemachineCameraTarget.transform.rotation = Quaternion.LookRotation(dir);
 
@@ -773,5 +862,9 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
         Debug.DrawLine(transform.position, transform.position + transform.up * referenceKeeper.PlayerData.JumpHight);
 
         Gizmos.DrawWireSphere(referenceKeeper.PlayerData.CharacterController.transform.position, referenceKeeper.PlayerData.CheckGroundedSphereRadius);
+
+        Gizmos.color = new Color(1,0,0,.3f);
+
+        Gizmos.DrawSphere(referenceKeeper.PlayerData.CharacterController.transform.position, referenceKeeper.PlayerData.SearchRadius);
     }
 }

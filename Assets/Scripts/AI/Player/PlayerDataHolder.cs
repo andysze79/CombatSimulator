@@ -32,9 +32,8 @@ public class PlayerDataHolder : MonoBehaviour
     [SerializeField] private float m_JumpGravityMultiplier = 2f;
     [SerializeField] private float m_JumpCDTime;
     [Header("Dash State")]
-    [SerializeField] private float m_DashCDTime;
+    [SerializeField] private float m_DashCDTime;    
     [Header("Attack State")]
-    public bool m_LockOn;
     [SerializeField] private float m_LockOnPitchOffset;
     [SerializeField] private bool m_InputCD;
     [SerializeField] private float m_InputCDTime;    
@@ -68,6 +67,11 @@ public class PlayerDataHolder : MonoBehaviour
     [FoldoutGroup("Animator Trigger Name")]
     [SerializeField] private string m_Combo7Name;
 
+    [Header("Search Settings")]
+    public bool m_LockOn;
+    [SerializeField] private float m_SearchRadius;
+    [SerializeField] private LayerMask m_SearchLayer;
+
     [FoldoutGroup("Combo Setting")]
     [SerializeField] private EnumHolder.ComboCounter m_Melee1LastCombo;
     [FoldoutGroup("Combo Setting")]
@@ -90,9 +94,6 @@ public class PlayerDataHolder : MonoBehaviour
     public bool m_EnableGizmos;
     [FoldoutGroup("Damage Settings")][ShowIf("m_EnableGizmos")]
     public int m_ShowThisComboPushBackDistance;
-
-    [FoldoutGroup("Attack Assistance Settings")]
-    public float m_FindEnemyRadius;    
 
     [FoldoutGroup("Trigger Settings")][ListDrawerSettings(ShowIndexLabels = true)]
     [SerializeField] private GameObject[] m_Melee1ComboTrigger;
@@ -170,6 +171,8 @@ public class PlayerDataHolder : MonoBehaviour
     public GameObject HitVFX { get { return m_HitVFX; } }
     public EnumHolder.ComboCounter[] EnableSlowMoWhenCheckTheseCombo { get { return m_EnableSlowMoWhenCheckTheseCombo; } }
     public bool AttackCD { get; set; }
+    public float SearchRadius { get { return m_SearchRadius; } }
+    public LayerMask SearchLayer { get { return m_SearchLayer; } }
     public EnumHolder.ComboCounter CurrentCombo { get { return m_CurrentCombo; } set { m_CurrentCombo = value; } }
     public EnumHolder.ComboCounter Melee1LastCombo { get { return m_Melee1LastCombo; } }
     public EnumHolder.ComboCounter Melee2LastCombo { get { return m_Melee2LastCombo; } }
