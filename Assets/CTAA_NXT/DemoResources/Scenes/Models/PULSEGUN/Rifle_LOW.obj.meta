@@ -1,0 +1,225 @@
+fileFormatVersion: 2
+guid: 3ae008692f6995d458a09ed1f54bd038
+ModelImporter:
+  serializedVersion: 23
+  fileIDToRecycleName:
+    100000: Barrels_low
+    100002: Base_low
+    100004: Dials_low
+    100006: Grip_low
+    100008: Handgrenade_low
+    100010: Handle_low
+    100012: Muzzle_low
+    100014: Nozzle_low
+    100016: //RootNode
+    100018: ScrewsA_Low
+    100020: Shoulder_low
+    100022: Top_low
+    100024: Trigger_low
+    400000: Barrels_low
+    400002: Base_low
+    400004: Dials_low
+    400006: Grip_low
+    400008: Handgrenade_low
+    400010: Handle_low
+    400012: Muzzle_low
+    400014: Nozzle_low
+    400016: //RootNode
+    400018: ScrewsA_Low
+    400020: Shoulder_low
+    400022: Top_low
+    400024: Trigger_low
+    2100000: Barrels_lowMat
+    2100002: Base_lowMat
+    2100004: Dials_lowMat
+    2100006: Grip_lowMat
+    2100008: Handgrenade_lowMat
+    2100010: Handle_lowMat
+    2100012: Muzzle_lowMat
+    2100014: Nozzle_lowMat
+    2100016: ScrewsA_LowMat
+    2100018: Shoulder_lowMat
+    2100020: Top_lowMat
+    2100022: Trigger_lowMat
+    2300000: Barrels_low
+    2300002: Base_low
+    2300004: Dials_low
+    2300006: Grip_low
+    2300008: Handgrenade_low
+    2300010: Handle_low
+    2300012: Muzzle_low
+    2300014: Nozzle_low
+    2300016: ScrewsA_Low
+    2300018: Shoulder_low
+    2300020: Top_low
+    2300022: Trigger_low
+    3300000: Barrels_low
+    3300002: Base_low
+    3300004: Dials_low
+    3300006: Grip_low
+    3300008: Handgrenade_low
+    3300010: Handle_low
+    3300012: Muzzle_low
+    3300014: Nozzle_low
+    3300016: ScrewsA_Low
+    3300018: Shoulder_low
+    3300020: Top_low
+    3300022: Trigger_low
+    4300000: Barrels_low
+    4300002: Base_low
+    4300004: Dials_low
+    4300006: Grip_low
+    4300008: Handgrenade_low
+    4300010: Handle_low
+    4300012: Muzzle_low
+    4300014: Nozzle_low
+    4300016: ScrewsA_Low
+    4300018: Shoulder_low
+    4300020: Top_low
+    4300022: Trigger_low
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Barrels_lowMat
+    second: {fileID: 2100000, guid: 794056ff205464a45b5ff3bee21911b5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Base_lowMat
+    second: {fileID: 2100000, guid: faed55ef54c096d4f98f484f691ea327, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Dials_lowMat
+    second: {fileID: 2100000, guid: 6dfbba722ea40084b8c3725fefe2bd42, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Grip_lowMat
+    second: {fileID: 2100000, guid: aeb51fef16c2cfd46888457c6499b171, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Handgrenade_lowMat
+    second: {fileID: 2100000, guid: 14b381f8816ed4d45904cd7f864c49e0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Handle_lowMat
+    second: {fileID: 2100000, guid: 9569127db095ff64e820c047a4f4f986, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Muzzle_lowMat
+    second: {fileID: 2100000, guid: d16e018a79662fc4480c8a50b88f0446, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Nozzle_lowMat
+    second: {fileID: 2100000, guid: b3d1847b928c4d64f8c1ef1414b91b0c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ScrewsA_LowMat
+    second: {fileID: 2100000, guid: 852cf08bee608aa4882472d6305565d5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Shoulder_lowMat
+    second: {fileID: 2100000, guid: 855ed8fcdb88236419f8592eeb777f70, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Top_lowMat
+    second: {fileID: 2100000, guid: ea21ed1ed9a418c409ba1d9493de3110, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Trigger_lowMat
+    second: {fileID: 2100000, guid: e452f23ed4dc0bc4fa805a90f2fe438b, type: 2}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 0.01
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
