@@ -69,8 +69,10 @@ public class PlayerDataHolder : MonoBehaviour
 
     [Header("Search Settings")]
     public bool m_LockOn;
+    [Min(1f)][SerializeField] private float m_LockOnCamTransitionSpeed;
     [SerializeField] private float m_SearchRadius;
     [SerializeField] private LayerMask m_SearchLayer;
+    [Min(.2f)][SerializeField] private float m_SwitchTargetCDTime;
 
     [FoldoutGroup("Combo Setting")]
     [SerializeField] private EnumHolder.ComboCounter m_Melee1LastCombo;
@@ -139,8 +141,10 @@ public class PlayerDataHolder : MonoBehaviour
     public float JumpGravityMultiplier { get {return m_JumpGravityMultiplier; } }
     public float JumpCDTime { get {return m_JumpCDTime; } }
     public float DashCDTime { get {return m_DashCDTime; } }
+    public float SwitchTargetCDTime { get {return m_SwitchTargetCDTime; } }
     public bool JumpCD { get; set; }
     public bool DashCD { get; set; }
+    public bool SwitchTargetCD { get; set; }
     public float LockOnPitchOffset { get { return m_LockOnPitchOffset; } }
     public bool InputCD { get { return m_InputCD; } set { m_InputCD = value; } }
     public float InputCDTime { get { return m_InputCDTime; } }
@@ -171,6 +175,7 @@ public class PlayerDataHolder : MonoBehaviour
     public GameObject HitVFX { get { return m_HitVFX; } }
     public EnumHolder.ComboCounter[] EnableSlowMoWhenCheckTheseCombo { get { return m_EnableSlowMoWhenCheckTheseCombo; } }
     public bool AttackCD { get; set; }
+    public float LockOnCamTransitionSpeed { get { return m_LockOnCamTransitionSpeed; } }
     public float SearchRadius { get { return m_SearchRadius; } }
     public LayerMask SearchLayer { get { return m_SearchLayer; } }
     public EnumHolder.ComboCounter CurrentCombo { get { return m_CurrentCombo; } set { m_CurrentCombo = value; } }

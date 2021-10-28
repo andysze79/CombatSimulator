@@ -241,6 +241,20 @@ AnimatorStateTransition:
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
+--- !u!114 &-6216473089142458721
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7736bf2daafbdd14490fddac3fbdc16c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_TriggerName:
+  - Jump
 --- !u!114 &-6047084848564195273
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1787,6 +1801,19 @@ AnimatorState:
   m_MirrorParameter: 
   m_CycleOffsetParameter: 
   m_TimeParameter: 
+--- !u!114 &2286192449061571800
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16b99998fb40d524797f2dd84c20e563, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_PlayerDataHolder: {fileID: 0}
 --- !u!1109 &2340240401206149744
 AnimatorTransition:
   m_ObjectHideFlags: 1
@@ -2075,6 +2102,7 @@ AnimatorState:
   - {fileID: 4375522388540213525}
   m_StateMachineBehaviours:
   - {fileID: 1340094079496431030}
+  - {fileID: -6216473089142458721}
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
   m_WriteDefaultValues: 1

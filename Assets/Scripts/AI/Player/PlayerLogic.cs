@@ -40,11 +40,16 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     private const float _threshold = 0.01f;
     private float _cinemachineTargetYaw;
     private float _cinemachineTargetPitch;
-    public List<Collider> CurrentEnemies = new List<Collider>();
+    public List<Collider> CurrentEnemies = new List<Collider>(); 
+    public List<Collider> SortedTarget = new List<Collider>();
+
     Coroutine LockOnProcess { get; set; }
     private void Update()
     {
         referenceKeeper.AnimationPlayer.AnimatorRef.SetBool(referenceKeeper.PlayerData.isGroundedName, CheckGrounded());
+        
+        if(!referenceKeeper.PlayerData.m_LockOn)
+            SearchEnemyContinuously();
     }
 
     #region Assign Delegate
@@ -89,6 +94,8 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
             smb.target = this;
         }
 
+        // Assign input delegate function
+        ActivateMelee();
         ActivateCamera();
         ActivateMove();
         ActivateLockOnTarget();
@@ -114,7 +121,8 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
         {
             HitTrigger.TriggerEnter -= PlayHitVFX;
         }
-
+        
+        DeactivateMelee();
         DeactivateCamera();
         DeactivateMove();
         DeactivateLockOnTarget();
@@ -149,7 +157,153 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     }
     #endregion
 
-    #region Input Receiver
+    #region Moving
+    private void ActivateMove() {        
+        UserControllerGetter.Instance.Joystick1InputDelegate += CheckMove;        
+        UserControllerGetter.Instance.Joystick1InputDelegate += CheckRotate;        
+        UserControllerGetter.Instance.Joystick1InputDelegate += SetAnimatorFloat;
+
+        UserControllerGetter.Instance.JumpUpDelegate += CheckJump;
+        UserControllerGetter.Instance.DashUpDelegate += CheckDash;
+    }
+    private void DeactivateMove() {
+        UserControllerGetter.Instance.Joystick1InputDelegate -= CheckMove;
+        UserControllerGetter.Instance.Joystick1InputDelegate -= CheckRotate;        
+        UserControllerGetter.Instance.Joystick1InputDelegate -= SetAnimatorFloat;        
+
+        UserControllerGetter.Instance.JumpUpDelegate -= CheckJump;
+        UserControllerGetter.Instance.DashUpDelegate -= CheckDash;
+    }    
+    private void CheckMove(float horizontal, float vertical) {
+
+        var moveValue = new Vector3(horizontal, 0, vertical);
+
+        var ChangeToCameraAlginment = Quaternion.AngleAxis(Camera.main.transform.eulerAngles.y, Vector3.up);
+                
+        moveValue = ChangeToCameraAlginment * moveValue;
+        moveValue = moveValue * Time.deltaTime * referenceKeeper.PlayerData.MoveSpeed;
+
+        // Gravity
+        moveValue.y = referenceKeeper.PlayerData.Gravity * Time.deltaTime;
+
+        referenceKeeper.PlayerData.CharacterController.Move(moveValue);
+    }
+    private void CheckRotate(float horizontal, float vertical) {
+
+        if (horizontal == 0 && vertical == 0) return;
+
+        var moveDir = new Vector3(horizontal, 0, vertical);
+
+        var ChangeToCameraAlginment = Quaternion.AngleAxis(Camera.main.transform.eulerAngles.y, Vector3.up);
+
+        var targetDir = ChangeToCameraAlginment * moveDir;
+
+        var newRot = Quaternion.LookRotation(targetDir);
+
+        var ratio = Quaternion.Angle(referenceKeeper.PlayerData.CharacterController.transform.rotation, newRot);
+        ratio = (ratio / 360) + 1;
+        ratio *= 2;
+
+        referenceKeeper.PlayerData.CharacterController.transform.rotation = Quaternion.RotateTowards(
+            referenceKeeper.PlayerData.CharacterController.transform.rotation,
+            newRot,
+            Time.deltaTime * referenceKeeper.PlayerData.RotateSpeed * ratio);
+    }
+    private void SetAnimatorFloat(float horizontal, float vertical) {
+        referenceKeeper.AnimationPlayer.AnimatorRef.SetFloat(referenceKeeper.PlayerData.RunHorizontalName, horizontal);
+        referenceKeeper.AnimationPlayer.AnimatorRef.SetFloat(referenceKeeper.PlayerData.RunVerticalName, vertical);
+    }
+
+    private void CharacterFacingEnemy() {
+        if (targetCollider == null) return;
+
+        var lookDir = targetCollider.transform.position - referenceKeeper.PlayerData.CharacterController.transform.position;
+        lookDir.y = 0;
+        lookDir = lookDir.normalized;
+
+        referenceKeeper.PlayerData.CharacterController.transform.rotation = Quaternion.LookRotation(lookDir);    
+    }
+
+    #region Jump
+    private bool CheckGrounded() {
+        return Physics.CheckSphere(
+            referenceKeeper.PlayerData.CharacterController.transform.position, 
+            referenceKeeper.PlayerData.CheckGroundedSphereRadius,
+            referenceKeeper.PlayerData.CheckGroundedLayer);        
+    }
+    
+    private void CheckJump()
+    {
+        if (!CheckGrounded() || referenceKeeper.PlayerData.JumpCD) return;
+
+        if (jumpProcess != null)
+            StopCoroutine(jumpProcess);
+
+        jumpProcess = StartCoroutine(JumpProcess());
+
+        SetAnimatorTrigger(referenceKeeper.PlayerData.JumpName);
+
+        referenceKeeper.PlayerData.JumpCD = true;
+    }
+    
+    private IEnumerator JumpProcess()
+    {        
+        var startTime = Time.time;
+        var velocity = Mathf.Sqrt(referenceKeeper.PlayerData.JumpHight * -2f * referenceKeeper.PlayerData.Gravity * referenceKeeper.PlayerData.JumpGravityMultiplier);
+
+        while (true)
+        {
+            velocity += referenceKeeper.PlayerData.Gravity * referenceKeeper.PlayerData.JumpGravityMultiplier * Time.deltaTime;
+            referenceKeeper.PlayerData.CharacterController.Move(new Vector3(0,velocity,0) * Time.deltaTime);
+
+            if (startTime > .5f && CheckGrounded()) break;
+
+            yield return null;
+        }
+
+        // Landing
+        Landing();
+
+        StartCoroutine(JumpCoolDown());
+    }
+    private void Landing() {
+        RaycastHit HitInfo;
+        Physics.Raycast(referenceKeeper.PlayerData.CharacterController.transform.position, -referenceKeeper.transform.up, out HitInfo, 100, referenceKeeper.PlayerData.CheckGroundedLayer);
+        TargetSurfacePosition = HitInfo.point; 
+    }
+    #endregion
+
+    #region Dash    
+    private void CheckDash()
+    {
+        if (referenceKeeper.PlayerData.DashCD || !CheckGrounded()) return;
+
+        SetAnimatorTrigger(referenceKeeper.PlayerData.DashName);
+
+        StartCoroutine(DashCoolDown());
+    }
+    #endregion
+
+    #endregion
+
+    #region Melee
+    private void ActivateMelee() {
+        UserControllerGetter.Instance.Fight1UpDelegate += Melee1Attack;
+        UserControllerGetter.Instance.Fight2DownDelegate += Melee2ButtonDown;
+        UserControllerGetter.Instance.Fight2UpDelegate += Melee2Attack;
+
+        UserControllerGetter.Instance.Fight1DownDelegate += CharacterFacingEnemy;
+        UserControllerGetter.Instance.Fight2DownDelegate += CharacterFacingEnemy;
+    }
+    private void DeactivateMelee()
+    {
+        UserControllerGetter.Instance.Fight1UpDelegate -= Melee1Attack;
+        UserControllerGetter.Instance.Fight2DownDelegate -= Melee2ButtonDown;
+        UserControllerGetter.Instance.Fight2UpDelegate -= Melee2Attack;
+
+        UserControllerGetter.Instance.Fight1DownDelegate -= CharacterFacingEnemy;
+        UserControllerGetter.Instance.Fight2DownDelegate -= CharacterFacingEnemy;
+    }    
     public void Melee1Attack() 
     {
         TriggerAttack(EnumHolder.AttackStyle.Melee1, referenceKeeper.PlayerData.Melee1Name, referenceKeeper.PlayerData.Melee1LastCombo);
@@ -186,122 +340,6 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
             referenceKeeper.PlayerData.m_WhenReleaseCharge?.Invoke();
         }
     }
-    public void TriggerAttack(EnumHolder.AttackStyle attackStyle, string AnimatorTriggerName, EnumHolder.ComboCounter lastCombo) {
-
-        // Check Derive to other Attack Style
-        if (referenceKeeper.PlayerData.CurrentAttackStyle != EnumHolder.AttackStyle.None &&
-            attackStyle != referenceKeeper.PlayerData.CurrentAttackStyle && 
-            !CheckDeriveToOtherAttackStyle(attackStyle, false)) return;
-
-        if (referenceKeeper.PlayerData.AttackCD) return;
-        if (referenceKeeper.PlayerData.InputCD) return;
-        if (referenceKeeper.PlayerData.CurrentCombo == lastCombo) return;
-        
-        InputCDProcess = StartCoroutine(InputCoolDown());
-
-        //print("Trigger attack");
-
-        // When start a new combo
-        if (referenceKeeper.PlayerData.CurrentCombo == EnumHolder.ComboCounter.Combo1)
-            ChangeAttackStyle(attackStyle);
-
-        // When outside the combo check range
-        if (!ListenToMeleeAttack)
-        {
-            referenceKeeper.AnimationPlayer.PlayAnimation(AnimatorTriggerName);
-        }
-        // When within the combo check range
-        else
-        {
-            if(referenceKeeper.PlayerData.EnableSlowMoWhenCheckTheseCombo.Length != 0) ResetTimeScale();
-            ComboHandling();
-        }
-    }
-    public IEnumerator CheckButtonDownTimer(EnumHolder.AttackStyle notChargedAttackStyle, EnumHolder.AttackStyle ChargedAttackStyle, string attackStyleAnimatorName) {
-        var startTime = Time.time;
-        var startChargeTime = referenceKeeper.PlayerData.StartChargeTime;
-        var endChargeTime = referenceKeeper.PlayerData.ChargeTime;
-        bool enteredCharge = false;
-
-        while (Time.time - startTime < endChargeTime)
-        {
-            if (Time.time - startTime > startChargeTime && !enteredCharge)
-            {
-                enteredCharge = true;
-
-                ChangeAttackStyle(notChargedAttackStyle);
-                ChangeAttackStyle(ChargedAttackStyle);
-                referenceKeeper.AnimationPlayer.PlayAnimation(attackStyleAnimatorName);
-
-                referenceKeeper.PlayerData.m_WhenStartCharge?.Invoke();
-            }
-
-            buttonDownTimer = Time.time - startTime;            
-            yield return null;
-        }
-
-        referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.ChargeName, true);
-        
-        referenceKeeper.PlayerData.m_WhenFinsihedCharge?.Invoke();
-
-        isCharge = true;
-    }
-    #endregion
-    #region Camera
-    private void ActivateCamera() {
-        UserControllerGetter.Instance.MouseInputDelegate += CameraRotation;
-        //UserControllerGetter.Instance.MouseInputDelegate += CheckCameraMovement;
-    }
-    private void DeactivateCamera()
-    {
-        UserControllerGetter.Instance.MouseInputDelegate -= CameraRotation;
-        //UserControllerGetter.Instance.MouseInputDelegate -= CheckCameraMovement;
-    }
-    
-    private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
-    {
-        if (lfAngle < -360f) lfAngle += 360f;
-        if (lfAngle > 360f) lfAngle -= 360f;
-        return Mathf.Clamp(lfAngle, lfMin, lfMax);
-    }
-    private void CameraRotation(float horizontal, float vertical)
-    {
-        Vector2 input = new Vector2(horizontal, vertical);
-        // if there is an input and camera position is not fixed
-        if (input.sqrMagnitude >= _threshold && !referenceKeeper.PlayerData.LockCameraPosition)
-        {
-            _cinemachineTargetYaw += input.x * Time.deltaTime * 100;
-            _cinemachineTargetPitch += input.y * Time.deltaTime * 100;
-        }
-
-        // clamp our rotations so our values are limited 360 degrees
-        _cinemachineTargetYaw = ClampAngle(_cinemachineTargetYaw, float.MinValue, float.MaxValue);
-        _cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, referenceKeeper.PlayerData.BottomClamp, referenceKeeper.PlayerData.TopClamp);
-
-        // Cinemachine will follow this target
-        referenceKeeper.PlayerData.CinemachineCameraTarget.transform.rotation = Quaternion.Euler(_cinemachineTargetPitch + referenceKeeper.PlayerData.CameraAngleOverride, _cinemachineTargetYaw, 0.0f);
-    }
-    private void CheckCameraMovement(float horizontal, float vertical) {
-        // normalise input direction
-        Vector3 inputDirection = new Vector3(horizontal, 0.0f, vertical).normalized;
-
-        // note: Vector2's != operator uses approximation so is not floating point error prone, and is cheaper than magnitude
-        // if there is a move input rotate player when the player is moving
-        if (horizontal != 0 || vertical != 0)
-        {
-            _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + referenceKeeper.PlayerData._3rdPersonCamera.transform.eulerAngles.y;
-            float rotation = Mathf.SmoothDampAngle(
-                referenceKeeper.PlayerData.CharacterController.transform.eulerAngles.y,
-                _targetRotation, 
-                ref _rotationVelocity, 
-                referenceKeeper.PlayerData.RotationSmoothTime);
-
-            // rotate to face input direction relative to camera position
-            referenceKeeper.PlayerData.CharacterController.transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
-        }
-
-    }
-    #endregion
     private bool CheckDeriveToOtherAttackStyle(EnumHolder.AttackStyle targetStyle, bool readyToSwitchStyle) {
         var result = false;
 
@@ -381,6 +419,136 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
         previousAttackStyle = referenceKeeper.PlayerData.CurrentAttackStyle;
         referenceKeeper.PlayerData.CurrentAttackStyle = target;
     }
+    private void SearchEnemyContinuously() {
+        var result = SearchTarget();
+        if (result) ChangeTargetCollider(result);
+
+        print("search");
+    }
+    public void TriggerAttack(EnumHolder.AttackStyle attackStyle, string AnimatorTriggerName, EnumHolder.ComboCounter lastCombo) {
+
+        // Check Derive to other Attack Style
+        if (referenceKeeper.PlayerData.CurrentAttackStyle != EnumHolder.AttackStyle.None &&
+            attackStyle != referenceKeeper.PlayerData.CurrentAttackStyle && 
+            !CheckDeriveToOtherAttackStyle(attackStyle, false)) return;
+
+        if (referenceKeeper.PlayerData.AttackCD) return;
+        if (referenceKeeper.PlayerData.InputCD) return;
+        if (referenceKeeper.PlayerData.CurrentCombo == lastCombo) return;
+        
+        InputCDProcess = StartCoroutine(InputCoolDown());
+
+        //print("Trigger attack");
+
+        // When start a new combo
+        if (referenceKeeper.PlayerData.CurrentCombo == EnumHolder.ComboCounter.Combo1)
+            ChangeAttackStyle(attackStyle);
+
+        // When outside the combo check range
+        if (!ListenToMeleeAttack)
+        {
+            referenceKeeper.AnimationPlayer.PlayAnimation(AnimatorTriggerName);
+        }
+        // When within the combo check range
+        else
+        {
+            if(referenceKeeper.PlayerData.EnableSlowMoWhenCheckTheseCombo.Length != 0) ResetTimeScale();
+            ComboHandling();
+        }
+    }
+    public IEnumerator CheckButtonDownTimer(EnumHolder.AttackStyle notChargedAttackStyle, EnumHolder.AttackStyle ChargedAttackStyle, string attackStyleAnimatorName) {
+        var startTime = Time.time;
+        var startChargeTime = referenceKeeper.PlayerData.StartChargeTime;
+        var endChargeTime = referenceKeeper.PlayerData.ChargeTime;
+        bool enteredCharge = false;
+
+        while (Time.time - startTime < endChargeTime)
+        {
+            if (Time.time - startTime > startChargeTime && !enteredCharge)
+            {
+                enteredCharge = true;
+
+                ChangeAttackStyle(notChargedAttackStyle);
+                ChangeAttackStyle(ChargedAttackStyle);
+                referenceKeeper.AnimationPlayer.PlayAnimation(attackStyleAnimatorName);
+
+                referenceKeeper.PlayerData.m_WhenStartCharge?.Invoke();
+            }
+
+            buttonDownTimer = Time.time - startTime;            
+            yield return null;
+        }
+
+        referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.ChargeName, true);
+        
+        referenceKeeper.PlayerData.m_WhenFinsihedCharge?.Invoke();
+
+        isCharge = true;
+    }
+    private void ResetComboCheckStatus()
+    {
+        referenceKeeper.PlayerData.CurrentCombo = 0;
+        ChangeAttackStyle(EnumHolder.AttackStyle.None);
+        AttackCDProcess = StartCoroutine(AttackCoolDown());
+    }
+    #endregion
+
+    #region Camera
+    private void ActivateCamera() {
+        UserControllerGetter.Instance.MouseInputDelegate += CameraRotation;
+        //UserControllerGetter.Instance.MouseInputDelegate += CheckCameraMovement;
+    }
+    private void DeactivateCamera()
+    {
+        UserControllerGetter.Instance.MouseInputDelegate -= CameraRotation;
+        //UserControllerGetter.Instance.MouseInputDelegate -= CheckCameraMovement;
+    }
+    
+    private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
+    {
+        if (lfAngle < -360f) lfAngle += 360f;
+        if (lfAngle > 360f) lfAngle -= 360f;
+        return Mathf.Clamp(lfAngle, lfMin, lfMax);
+    }
+    private void CameraRotation(float horizontal, float vertical)
+    {
+        Vector2 input = new Vector2(horizontal, vertical);
+        // if there is an input and camera position is not fixed
+        if (input.sqrMagnitude >= _threshold && !referenceKeeper.PlayerData.LockCameraPosition)
+        {
+            _cinemachineTargetYaw += input.x * Time.deltaTime * 100;
+            _cinemachineTargetPitch += input.y * Time.deltaTime * 100;
+        }
+
+        // clamp our rotations so our values are limited 360 degrees
+        _cinemachineTargetYaw = ClampAngle(_cinemachineTargetYaw, float.MinValue, float.MaxValue);
+        _cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, referenceKeeper.PlayerData.BottomClamp, referenceKeeper.PlayerData.TopClamp);
+
+        // Cinemachine will follow this target
+        referenceKeeper.PlayerData.CinemachineCameraTarget.transform.rotation = Quaternion.Euler(_cinemachineTargetPitch + referenceKeeper.PlayerData.CameraAngleOverride, _cinemachineTargetYaw, 0.0f);
+    }
+    private void CheckCameraMovement(float horizontal, float vertical) {
+        // normalise input direction
+        Vector3 inputDirection = new Vector3(horizontal, 0.0f, vertical).normalized;
+
+        // note: Vector2's != operator uses approximation so is not floating point error prone, and is cheaper than magnitude
+        // if there is a move input rotate player when the player is moving
+        if (horizontal != 0 || vertical != 0)
+        {
+            _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + referenceKeeper.PlayerData._3rdPersonCamera.transform.eulerAngles.y;
+            float rotation = Mathf.SmoothDampAngle(
+                referenceKeeper.PlayerData.CharacterController.transform.eulerAngles.y,
+                _targetRotation, 
+                ref _rotationVelocity, 
+                referenceKeeper.PlayerData.RotationSmoothTime);
+
+            // rotate to face input direction relative to camera position
+            referenceKeeper.PlayerData.CharacterController.transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+        }
+
+    }
+    #endregion
+
     #region Animation Event Section
     private void ComboCheckStart() {
         ListenToMeleeAttack = true;
@@ -508,22 +676,23 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     #endregion
 
     #region Attack Assistance
+    private void ChangeTarget(float horizontal, float vertical)
+    {
+        if (horizontal > -.5f && horizontal < .5 && vertical > -.5 && vertical < .5) return;
+        if (referenceKeeper.PlayerData.SwitchTargetCD) return;
+
+        SearchTarget();
+        ChangeLockTarget();
+        SwitchToNextTarget(horizontal, vertical);
+    }
     private Collider SearchTarget() {
         var result = Physics.OverlapSphere(
             referenceKeeper.PlayerData.CharacterController.transform.position, 
             referenceKeeper.PlayerData.SearchRadius,
             referenceKeeper.PlayerData.SearchLayer);
-               
-        if (result.Length != 0)
-        {
-            targetCollider = OrderByFacingDegree(result);
-        }
-        else {
-            targetCollider = null;
-        }
-
-        return targetCollider;
-    }
+                       
+        return OrderByFacingDegree(result);
+    }    
     /// <summary>
     /// This func will arrange the targets and return the closet target
     /// </summary>
@@ -560,7 +729,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     {
         if (targets.Length == 0) return null;
 
-        Dictionary<Collider, float> Dist = new Dictionary<Collider, float>();
+        Dictionary<Collider, float> Angle = new Dictionary<Collider, float>();
         var playerPos = referenceKeeper.PlayerData.CharacterController.transform.position;
         var playerFacing = referenceKeeper.PlayerData._3rdPersonCamera.transform.forward;        
         Vector3 dir;
@@ -568,10 +737,10 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
         for (int i = 0; i < targets.Length; i++)
         {
             dir = (targets[i].transform.position - playerPos).normalized;
-            Dist.Add(targets[i], Vector3.Angle(playerFacing, dir));
+            Angle.Add(targets[i], Vector3.Angle(playerFacing, dir));
         }
 
-        var newResult = Dist.OrderBy(x => x.Value);
+        var newResult = Angle.OrderBy(x => x.Value);
 
         CurrentEnemies.Clear();
 
@@ -582,6 +751,51 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
 
         return CurrentEnemies[0];
     }
+    private void SwitchToNextTarget(float horizontal, float vertical) {
+        Dictionary<Collider, float> HorizontalTargetAngle = new Dictionary<Collider, float>();
+        Dictionary<Collider, float> VerticalTargetAngle = new Dictionary<Collider, float>();
+        SortedTarget.Clear();
+
+        var playerPos = referenceKeeper.PlayerData.CharacterController.transform.position;
+        var playerLeftRight =  (horizontal / Mathf.Abs(horizontal)) * referenceKeeper.PlayerData._3rdPersonCamera.transform.right;
+        var playerUpDown =  (vertical / Mathf.Abs(vertical)) * referenceKeeper.PlayerData._3rdPersonCamera.transform.up;
+        Vector3 dir;
+
+        for (int i = 0; i < CurrentEnemies.Count; i++)
+        {
+            dir = (CurrentEnemies[i].transform.position - playerPos).normalized;
+            HorizontalTargetAngle.Add(CurrentEnemies[i], Vector3.Angle(playerLeftRight, dir));
+            VerticalTargetAngle.Add(CurrentEnemies[i], Vector3.Angle(playerUpDown, dir));
+        }
+
+        bool isHorizontal = true;
+
+        if(Mathf.Abs(horizontal) > .5f)
+            isHorizontal = true;
+        //if(Mathf.Abs(vertical) > .5f)
+        //    isHorizontal = false;        
+
+        var newResult = (isHorizontal) ? HorizontalTargetAngle.OrderBy(x => x.Value): VerticalTargetAngle.OrderBy(x => x.Value);
+
+        foreach (var kvp in newResult)
+        {
+            SortedTarget.Add(kvp.Key);
+        }
+
+        for (int i = 0; i < SortedTarget.Count; i++)
+        {
+            if (SortedTarget[i] == targetCollider) {
+                if (i - 1 >= 0)
+                    ChangeTargetCollider(SortedTarget[i - 1]);
+            }
+        }
+    }
+    private void ChangeTargetCollider(Collider newTarget) {
+        targetCollider = newTarget;
+
+        if(targetCollider != null)
+            EventHandler.WhenLockOnTarget?.Invoke(targetCollider.transform);
+    }
     private void ActivateLockOnTarget()
     {
         UserControllerGetter.Instance.LockOnUpDelegate += LockOnTarget;
@@ -590,27 +804,39 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     {
         UserControllerGetter.Instance.LockOnUpDelegate -= LockOnTarget;
     }
+    private void ActivateSwitchTarget()
+    {
+        UserControllerGetter.Instance.MouseInputDelegate += ChangeTarget;
+    }
+    private void DeactivateSwitchTarget()
+    {
+        UserControllerGetter.Instance.MouseInputDelegate -= ChangeTarget;
+    }
     private void LockOnTarget() {
-
-        if (SearchTarget() == null) return;
-
         if (!referenceKeeper.PlayerData.m_LockOn)
-        {          
-            referenceKeeper.PlayerData.m_LockOn = true;
+        {
+            var target = SearchTarget();
+            if (target == null) return;
+            
+            ChangeTargetCollider(target);
 
+            referenceKeeper.PlayerData.m_LockOn = true;
+                        
             DeactivateCamera();
+            ActivateSwitchTarget();
 
             if (LockOnProcess != null)
                 StopCoroutine(LockOnProcess);
 
-            LockOnProcess = StartCoroutine(LockOnTarget(referenceKeeper.PlayerData.CharacterController.transform));
+            LockOnProcess = StartCoroutine(LockOnTarget(referenceKeeper.PlayerData.CharacterController.transform));            
         }
         else 
         {
             referenceKeeper.PlayerData.m_LockOn = false;
 
+            ChangeTargetCollider(null);
+
             var rot = referenceKeeper.PlayerData.CinemachineCameraTarget.transform.localEulerAngles;
-            print(rot);
 
             if (LockOnProcess != null)
                 StopCoroutine(LockOnProcess);
@@ -624,83 +850,52 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
                     _cinemachineTargetYaw, 
                     0.0f);
             
+            DeactivateSwitchTarget();
             ActivateCamera();
+
+            EventHandler.WhenUnlockTarget?.Invoke();
         }        
     }
-    private IEnumerator LockOnTarget(Transform target) {
+    private void ChangeLockTarget() {
+        if (LockOnProcess != null)
+            StopCoroutine(LockOnProcess);
+
+        LockOnProcess = StartCoroutine(LockOnTarget(referenceKeeper.PlayerData.CharacterController.transform));
+
+        StartCoroutine(SwitchTargetCoolDown());
+    }
+    private IEnumerator LockOnTarget(Transform player) {
         Vector3 dir;
         Quaternion targetRot;
         float step = 0;
 
-        while (step < 1)
+        while (step < .5f)
         {
-            dir = targetCollider.transform.position - new Vector3(target.position.x, target.position.y - referenceKeeper.PlayerData.LockOnPitchOffset, target.position.z);
+            dir = targetCollider.transform.position - new Vector3(player.position.x, player.position.y - referenceKeeper.PlayerData.LockOnPitchOffset, player.position.z);
             dir = dir.normalized;
 
             targetRot = Quaternion.LookRotation(dir);
-            step += Time.deltaTime;
+            step += Time.deltaTime * referenceKeeper.PlayerData.LockOnCamTransitionSpeed;
             referenceKeeper.PlayerData.CinemachineCameraTarget.transform.rotation = Quaternion.Slerp(referenceKeeper.PlayerData.CinemachineCameraTarget.transform.rotation, targetRot, step);
 
             yield return null;
         }        
         
-        while (true)
+        while (Vector3.Distance(targetCollider.transform.position, referenceKeeper.PlayerData.CharacterController.transform.position) < referenceKeeper.PlayerData.SearchRadius)
         {            
-            dir = targetCollider.transform.position - new Vector3(target.position.x, target.position.y - referenceKeeper.PlayerData.LockOnPitchOffset, target.position.z);
+            dir = targetCollider.transform.position - new Vector3(player.position.x, player.position.y - referenceKeeper.PlayerData.LockOnPitchOffset, player.position.z);
             dir = dir.normalized;          
 
             referenceKeeper.PlayerData.CinemachineCameraTarget.transform.rotation = Quaternion.LookRotation(dir);
 
             yield return null;
         }
+
+        LockOnTarget();
     }
     #endregion
-    private void SetAnimationTrigger() {        
-        switch (referenceKeeper.PlayerData.CurrentCombo)
-        {
-            case EnumHolder.ComboCounter.Combo1:
-                referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.Combo1Name);
-                break;
-            case EnumHolder.ComboCounter.Combo2:
-                referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.Combo2Name);
-                break;
-            case EnumHolder.ComboCounter.Combo3:
-                referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.Combo3Name);
-                break;
-            case EnumHolder.ComboCounter.Combo4:
-                referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.Combo4Name);
-                break;
-            case EnumHolder.ComboCounter.Combo5:
-                referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.Combo5Name);
-                break;
-            case EnumHolder.ComboCounter.Combo6:
-                referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.Combo6Name);
-                break;
-            case EnumHolder.ComboCounter.Combo7:
-                referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.Combo7Name);
-                break;
-            default:
-                break;
-        }
-    }
-    private void SlowDownComboTime() {
-        for (int i = 0; i < referenceKeeper.PlayerData.EnableSlowMoWhenCheckTheseCombo.Length; i++)
-        {
-            if (referenceKeeper.PlayerData.CurrentCombo == referenceKeeper.PlayerData.EnableSlowMoWhenCheckTheseCombo[i])
-            {
-                TimeManager.Instance.StartTimeEvent("ComboCheck");
-            }
-        }
-    }
-    private void ResetTimeScale() {
-        TimeManager.Instance.ResetTimeScale();
-    }
-    private void ResetComboCheckStatus() {
-        referenceKeeper.PlayerData.CurrentCombo = 0;
-        ChangeAttackStyle(EnumHolder.AttackStyle.None);
-        AttackCDProcess = StartCoroutine(AttackCoolDown());
-    }
     
+    #region Coroutine Section
     private IEnumerator HitVFXTriggerLifeTime() {
         referenceKeeper.PlayerData.HitVFXTrigger.SetActive(true);
         yield return new WaitForSeconds(.1f);
@@ -729,123 +924,55 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
         yield return new WaitForSeconds(referenceKeeper.PlayerData.DashCDTime);
         referenceKeeper.PlayerData.DashCD = false;
     }
-    #region Moving
-    private void ActivateMove() {        
-        UserControllerGetter.Instance.Joystick1InputDelegate += CheckMove;        
-        UserControllerGetter.Instance.Joystick1InputDelegate += CheckRotate;        
-        UserControllerGetter.Instance.Joystick1InputDelegate += SetAnimatorFloat;
-
-        UserControllerGetter.Instance.JumpUpDelegate += CheckJump;
-        UserControllerGetter.Instance.DashUpDelegate += CheckDash;
-    }
-    private void DeactivateMove() {
-        UserControllerGetter.Instance.Joystick1InputDelegate -= CheckMove;
-        UserControllerGetter.Instance.Joystick1InputDelegate -= CheckRotate;        
-        UserControllerGetter.Instance.Joystick1InputDelegate -= SetAnimatorFloat;        
-
-        UserControllerGetter.Instance.JumpUpDelegate -= CheckJump;
-        UserControllerGetter.Instance.DashUpDelegate -= CheckDash;
-    }    
-    private void CheckMove(float horizontal, float vertical) {
-
-        var moveValue = new Vector3(horizontal, 0, vertical);
-
-        var ChangeToCameraAlginment = Quaternion.AngleAxis(Camera.main.transform.eulerAngles.y, Vector3.up);
-                
-        moveValue = ChangeToCameraAlginment * moveValue;
-        moveValue = moveValue * Time.deltaTime * referenceKeeper.PlayerData.MoveSpeed;
-
-        // Gravity
-        moveValue.y = referenceKeeper.PlayerData.Gravity * Time.deltaTime;
-
-        referenceKeeper.PlayerData.CharacterController.Move(moveValue);
-    }
-    private void CheckRotate(float horizontal, float vertical) {
-
-        if (horizontal == 0 && vertical == 0) return;
-
-        var moveDir = new Vector3(horizontal, 0, vertical);
-
-        var ChangeToCameraAlginment = Quaternion.AngleAxis(Camera.main.transform.eulerAngles.y, Vector3.up);
-
-        var targetDir = ChangeToCameraAlginment * moveDir;
-
-        var newRot = Quaternion.LookRotation(targetDir);
-
-        var ratio = Quaternion.Angle(referenceKeeper.PlayerData.CharacterController.transform.rotation, newRot);
-        ratio = (ratio / 360) + 1;
-        ratio *= 2;
-
-        referenceKeeper.PlayerData.CharacterController.transform.rotation = Quaternion.RotateTowards(
-            referenceKeeper.PlayerData.CharacterController.transform.rotation,
-            newRot,
-            Time.deltaTime * referenceKeeper.PlayerData.RotateSpeed * ratio);
-    }
-    private void SetAnimatorFloat(float horizontal, float vertical) {
-        referenceKeeper.AnimationPlayer.AnimatorRef.SetFloat(referenceKeeper.PlayerData.RunHorizontalName, horizontal);
-        referenceKeeper.AnimationPlayer.AnimatorRef.SetFloat(referenceKeeper.PlayerData.RunVerticalName, vertical);
-    }
-    #region Jump
-    private bool CheckGrounded() {
-        return Physics.CheckSphere(
-            referenceKeeper.PlayerData.CharacterController.transform.position, 
-            referenceKeeper.PlayerData.CheckGroundedSphereRadius,
-            referenceKeeper.PlayerData.CheckGroundedLayer);        
-    }
-    
-    private void CheckJump()
+    private IEnumerator SwitchTargetCoolDown()
     {
-        if (!CheckGrounded() || referenceKeeper.PlayerData.JumpCD) return;
-
-        if (jumpProcess != null)
-            StopCoroutine(jumpProcess);
-
-        jumpProcess = StartCoroutine(JumpProcess());
-
-        SetAnimatorTrigger(referenceKeeper.PlayerData.JumpName);
-
-        referenceKeeper.PlayerData.JumpCD = true;
+        referenceKeeper.PlayerData.SwitchTargetCD = true;
+        yield return new WaitForSeconds(referenceKeeper.PlayerData.SwitchTargetCDTime);
+        referenceKeeper.PlayerData.SwitchTargetCD = false;
     }
-    
-    private IEnumerator JumpProcess()
-    {        
-        var startTime = Time.time;
-        var velocity = Mathf.Sqrt(referenceKeeper.PlayerData.JumpHight * -2f * referenceKeeper.PlayerData.Gravity * referenceKeeper.PlayerData.JumpGravityMultiplier);
+    #endregion
 
-        while (true)
+
+    private void SlowDownComboTime() {
+        for (int i = 0; i < referenceKeeper.PlayerData.EnableSlowMoWhenCheckTheseCombo.Length; i++)
         {
-            velocity += referenceKeeper.PlayerData.Gravity * referenceKeeper.PlayerData.JumpGravityMultiplier * Time.deltaTime;
-            referenceKeeper.PlayerData.CharacterController.Move(new Vector3(0,velocity,0) * Time.deltaTime);
-
-            if (startTime > .5f && CheckGrounded()) break;
-
-            yield return null;
+            if (referenceKeeper.PlayerData.CurrentCombo == referenceKeeper.PlayerData.EnableSlowMoWhenCheckTheseCombo[i])
+            {
+                TimeManager.Instance.StartTimeEvent("ComboCheck");
+            }
         }
-
-        // Landing
-        Landing();
-
-        StartCoroutine(JumpCoolDown());
     }
-    private void Landing() {
-        RaycastHit HitInfo;
-        Physics.Raycast(referenceKeeper.PlayerData.CharacterController.transform.position, -referenceKeeper.transform.up, out HitInfo, 100, referenceKeeper.PlayerData.CheckGroundedLayer);
-        TargetSurfacePosition = HitInfo.point; 
+    private void ResetTimeScale() {
+        TimeManager.Instance.ResetTimeScale();
     }
-    #endregion
-    #region Dash    
-    private void CheckDash()
-    {
-        if (referenceKeeper.PlayerData.DashCD || !CheckGrounded()) return;
-
-        SetAnimatorTrigger(referenceKeeper.PlayerData.DashName);
-
-        StartCoroutine(DashCoolDown());
+    private void SetAnimationTrigger() {        
+        switch (referenceKeeper.PlayerData.CurrentCombo)
+        {
+            case EnumHolder.ComboCounter.Combo1:
+                referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.Combo1Name);
+                break;
+            case EnumHolder.ComboCounter.Combo2:
+                referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.Combo2Name);
+                break;
+            case EnumHolder.ComboCounter.Combo3:
+                referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.Combo3Name);
+                break;
+            case EnumHolder.ComboCounter.Combo4:
+                referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.Combo4Name);
+                break;
+            case EnumHolder.ComboCounter.Combo5:
+                referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.Combo5Name);
+                break;
+            case EnumHolder.ComboCounter.Combo6:
+                referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.Combo6Name);
+                break;
+            case EnumHolder.ComboCounter.Combo7:
+                referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.Combo7Name);
+                break;
+            default:
+                break;
+        }
     }
-    #endregion
-    #endregion
-
-
     private void SetAnimatorBool(string name, bool value)
     {
         referenceKeeper.AnimationPlayer.AnimatorRef.SetBool(name, value);
