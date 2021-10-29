@@ -6,17 +6,20 @@ using UltEvents;
 public class EnemyLogic : MonoBehaviour,IDamagable
 {
     public UltEvent WhenReceiveDamage;
+    public delegate void EnemyDelegate();
+    public EnemyDelegate OnReceiveDamage;
+
     Coroutine PositionLerpingProcess { get; set; }
     void IDamagable.OnReceiveDamage(int damageAmount, float pushBackDistance, float duration, AnimationCurve movement, Transform attacker)
     {
         WhenReceiveDamage?.Invoke();
+        OnReceiveDamage?.Invoke();
 
         if (PositionLerpingProcess != null)
             StopCoroutine(PositionLerpingProcess);
 
         PositionLerpingProcess = StartCoroutine(PositionLerping(pushBackDistance, duration, movement, attacker));        
-    }
-    
+    }    
     private IEnumerator PositionLerping(float pushBackDistance, float duration, AnimationCurve movement, Transform attacker)
     {
         var startTime = Time.time;
@@ -39,4 +42,5 @@ public class EnemyLogic : MonoBehaviour,IDamagable
 
         PositionLerpingProcess = null;
     }
+   
 }

@@ -30,7 +30,6 @@ public class MatchLandPositionSMB : StateMachineBehaviour
         }
 
         isSkip = false;
-        Debug.Log(isSkip +" " + target.TargetSurfacePosition+ " "+animator.rootPosition);
     }
 
     public override void OnStateIK(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)

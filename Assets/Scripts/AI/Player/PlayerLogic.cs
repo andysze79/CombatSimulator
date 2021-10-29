@@ -6,8 +6,9 @@ using System.Linq;
 
 public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
 {
+    public bool m_ConnectWithStateMachine;
     [ReadOnly] [SerializeField] private bool EnableCombo;
-    [ReadOnly] [SerializeField] private bool ListenToMeleeAttack;    
+    [ReadOnly] [SerializeField] private bool ListenToMeleeAttack;
     public ReferenceKeeper referenceKeeper { get; set; }
     Coroutine InputCDProcess { get; set; }
     Coroutine AttackCDProcess { get; set; }
@@ -36,12 +37,14 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     EnumHolder.AttackStyle previousAttackStyle;
     EnumHolder.AttackStyle deriveToThisStyle;
     private float _rotationVelocity;
-    private float _targetRotation; 
+    private float _targetRotation;
     private const float _threshold = 0.01f;
     private float _cinemachineTargetYaw;
     private float _cinemachineTargetPitch;
-    public List<Collider> CurrentEnemies = new List<Collider>(); 
+    public List<Collider> CurrentEnemies = new List<Collider>();
     public List<Collider> SortedTarget = new List<Collider>();
+
+    public Vector3 moveValue;
 
     Coroutine LockOnProcess { get; set; }
     private void Update()
@@ -57,25 +60,27 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     {
         referenceKeeper = GetComponent<ReferenceKeeper>();
 
+        #region Melee animation Delegate
         referenceKeeper.AnimationPlayer.WhenCheckComboStart += ComboCheckStart;
         referenceKeeper.AnimationPlayer.WhenCheckComboStart += SlowDownComboTime;
         referenceKeeper.AnimationPlayer.WhenCheckComboEnd += ComboCheckEnd;
         referenceKeeper.AnimationPlayer.WhenAttackEnded += AttackEnded;
         referenceKeeper.AnimationPlayer.WhenTurnOnDamageTrigger += TurnOnDamageTrigger;
         referenceKeeper.AnimationPlayer.WhenTurnOffDamageTrigger += TurnOffDamageTrigger;
-
         referenceKeeper.AnimationPlayer.WhenPlayComboVFX += PlayComboVFX;
+        #endregion
 
-        #region Assign Combo Trigger Event
+        #region Assign Melee Trigger Event
         AssignTriggerDelegate(referenceKeeper.PlayerData.Melee1ComboTrigger, true);
         AssignTriggerDelegate(referenceKeeper.PlayerData.Melee2ComboTrigger, true);
         AssignTriggerDelegate(referenceKeeper.PlayerData.Melee3ComboTrigger, true);
-        #endregion
-
+        
         if (referenceKeeper.PlayerData.HitVFXTrigger.TryGetComponent(out DamageTrigger HitTrigger)) 
         {            
             HitTrigger.TriggerEnter += PlayHitVFX;
         }
+        #endregion
+
 
         // Animator Initialize
         referenceKeeper.AnimationPlayer.AnimatorRef.keepAnimatorControllerStateOnDisable = true;
@@ -95,6 +100,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
         }
 
         // Assign input delegate function
+        if (m_ConnectWithStateMachine) return;
         ActivateMelee();
         ActivateCamera();
         ActivateMove();
@@ -121,7 +127,8 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
         {
             HitTrigger.TriggerEnter -= PlayHitVFX;
         }
-        
+
+        if (m_ConnectWithStateMachine) return;
         DeactivateMelee();
         DeactivateCamera();
         DeactivateMove();
@@ -158,7 +165,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     #endregion
 
     #region Moving
-    private void ActivateMove() {        
+    public void ActivateMove() {        
         UserControllerGetter.Instance.Joystick1InputDelegate += CheckMove;        
         UserControllerGetter.Instance.Joystick1InputDelegate += CheckRotate;        
         UserControllerGetter.Instance.Joystick1InputDelegate += SetAnimatorFloat;
@@ -166,7 +173,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
         UserControllerGetter.Instance.JumpUpDelegate += CheckJump;
         UserControllerGetter.Instance.DashUpDelegate += CheckDash;
     }
-    private void DeactivateMove() {
+    public void DeactivateMove() {
         UserControllerGetter.Instance.Joystick1InputDelegate -= CheckMove;
         UserControllerGetter.Instance.Joystick1InputDelegate -= CheckRotate;        
         UserControllerGetter.Instance.Joystick1InputDelegate -= SetAnimatorFloat;        
@@ -176,7 +183,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     }    
     private void CheckMove(float horizontal, float vertical) {
 
-        var moveValue = new Vector3(horizontal, 0, vertical);
+        moveValue = new Vector3(horizontal, 0, vertical);
 
         var ChangeToCameraAlginment = Quaternion.AngleAxis(Camera.main.transform.eulerAngles.y, Vector3.up);
                 
@@ -287,7 +294,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     #endregion
 
     #region Melee
-    private void ActivateMelee() {
+    public void ActivateMelee() {
         UserControllerGetter.Instance.Fight1UpDelegate += Melee1Attack;
         UserControllerGetter.Instance.Fight2DownDelegate += Melee2ButtonDown;
         UserControllerGetter.Instance.Fight2UpDelegate += Melee2Attack;
@@ -295,7 +302,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
         UserControllerGetter.Instance.Fight1DownDelegate += CharacterFacingEnemy;
         UserControllerGetter.Instance.Fight2DownDelegate += CharacterFacingEnemy;
     }
-    private void DeactivateMelee()
+    public void DeactivateMelee()
     {
         UserControllerGetter.Instance.Fight1UpDelegate -= Melee1Attack;
         UserControllerGetter.Instance.Fight2DownDelegate -= Melee2ButtonDown;
@@ -422,8 +429,6 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     private void SearchEnemyContinuously() {
         var result = SearchTarget();
         if (result) ChangeTargetCollider(result);
-
-        print("search");
     }
     public void TriggerAttack(EnumHolder.AttackStyle attackStyle, string AnimatorTriggerName, EnumHolder.ComboCounter lastCombo) {
 
@@ -494,11 +499,11 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     #endregion
 
     #region Camera
-    private void ActivateCamera() {
+    public void ActivateCamera() {
         UserControllerGetter.Instance.MouseInputDelegate += CameraRotation;
         //UserControllerGetter.Instance.MouseInputDelegate += CheckCameraMovement;
     }
-    private void DeactivateCamera()
+    public void DeactivateCamera()
     {
         UserControllerGetter.Instance.MouseInputDelegate -= CameraRotation;
         //UserControllerGetter.Instance.MouseInputDelegate -= CheckCameraMovement;
@@ -796,19 +801,19 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
         if(targetCollider != null)
             EventHandler.WhenLockOnTarget?.Invoke(targetCollider.transform);
     }
-    private void ActivateLockOnTarget()
+    public void ActivateLockOnTarget()
     {
         UserControllerGetter.Instance.LockOnUpDelegate += LockOnTarget;
     }
-    private void DeactivateLockOnTarget()
+    public void DeactivateLockOnTarget()
     {
         UserControllerGetter.Instance.LockOnUpDelegate -= LockOnTarget;
     }
-    private void ActivateSwitchTarget()
+    public void ActivateSwitchTarget()
     {
         UserControllerGetter.Instance.MouseInputDelegate += ChangeTarget;
     }
-    private void DeactivateSwitchTarget()
+    public void DeactivateSwitchTarget()
     {
         UserControllerGetter.Instance.MouseInputDelegate -= ChangeTarget;
     }

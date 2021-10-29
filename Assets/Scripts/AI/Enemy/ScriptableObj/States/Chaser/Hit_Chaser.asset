@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 856d4dc457be511419884d134d9af603, type: 3}
+  m_Name: Hit_Chaser
+  m_EditorClassIdentifier: 
+  actions: []
+  transitions:
+  - decision:
+    - {fileID: 11400000, guid: ae88ad339353c444a86023b4635f82d4, type: 2}
+    - {fileID: 11400000, guid: 28307c2742e48b447b1806eac6e9e548, type: 2}
+    logic: 1
+    trueState: {fileID: 11400000, guid: a5e31d9310ad86a4aad52f4b98473d7d, type: 2}
+    falseState: {fileID: 11400000, guid: ab578fd6f3cb07c419984e35ac07291b, type: 2}
+  playThisAnimation: 3
+  sceneGizmoColor: {r: 0.5188679, g: 0.015358231, b: 0, a: 1}
