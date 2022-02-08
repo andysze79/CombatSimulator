@@ -5,24 +5,26 @@ namespace CombateSimulator.PlayerFSM
 {
     public class Hit : State
     {
-        protected override void OnDisable()
-        {
-            throw new System.NotImplementedException();
-        }
-
+        Coroutine process { get; set; }
         protected override void OnEnable()
         {
-            throw new System.NotImplementedException();
+            if (process != null)
+                StopCoroutine(process);
+            process = StartCoroutine(HitStunDuration());
         }
-
-        protected override void Trasnsition()
+        protected override void OnDisable()
         {
-            throw new System.NotImplementedException();
+            
         }
-
+        
         protected override void Update()
         {
-            throw new System.NotImplementedException();
+
+        }
+        private IEnumerator HitStunDuration() {
+            yield return new WaitForSeconds(stateMachine.playerData.StunDuration);
+
+            stateMachine.EnterState(typeof(Idle));
         }
     }
 }

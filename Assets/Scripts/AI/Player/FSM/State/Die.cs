@@ -16,11 +16,6 @@ namespace CombateSimulator.PlayerFSM
             throw new System.NotImplementedException();
         }
 
-        protected override void Trasnsition()
-        {
-            throw new System.NotImplementedException();
-        }
-
         protected override void Update()
         {
             throw new System.NotImplementedException();

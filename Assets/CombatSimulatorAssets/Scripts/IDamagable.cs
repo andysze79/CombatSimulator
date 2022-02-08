@@ -4,5 +4,5 @@ using UnityEngine;
 
 public interface IDamagable
 {
-    void OnReceiveDamage(int damageAmount, float pushBackDistance, float duration, AnimationCurve movement, Transform attacker);
+    void OnReceiveDamage(float damageAmount, float pushBackDistance, float duration, AnimationCurve movement, Transform attacker);
 }

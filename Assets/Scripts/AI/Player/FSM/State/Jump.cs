@@ -6,24 +6,42 @@ namespace CombateSimulator.PlayerFSM
 {
     public class Jump : State
     {
-        protected override void OnDisable()
-        {
-            throw new System.NotImplementedException();
-        }
-
         protected override void OnEnable()
         {
-            throw new System.NotImplementedException();
-        }
+            stateMachine.playerLogic.ActivateCamera();
+            stateMachine.playerLogic.ActivateMelee();
+            stateMachine.playerLogic.ActivateMove();
+            stateMachine.playerLogic.ActivateLockOnTarget();
 
-        protected override void Trasnsition()
+            UserControllerGetter.Instance.Joystick1InputDelegate += WhenReceiveJoystick1Input;
+        }
+        protected override void OnDisable()
         {
-            throw new System.NotImplementedException();
-        }
+            stateMachine.playerLogic.DeactivateCamera();
+            stateMachine.playerLogic.DeactivateMelee();
+            stateMachine.playerLogic.DeactivateMove();
+            stateMachine.playerLogic.DeactivateLockOnTarget();
 
+            UserControllerGetter.Instance.Joystick1InputDelegate -= WhenReceiveJoystick1Input;
+        }
         protected override void Update()
         {
-            throw new System.NotImplementedException();
+            
         }
+        protected override void WhenReceiveJoystick1Input(float horizontal, float vertical)
+        {                
+            if (stateMachine.playerLogic.CheckGrounded())            
+            {
+                if (Mathf.Abs(stateMachine.playerData.CharacterController.velocity.magnitude) == 0f)
+                {
+                    stateMachine.EnterState(typeof(Idle));
+                }
+                else
+                { 
+                    stateMachine.EnterState(typeof(Move));                    
+                }
+            }
+        }
+
     }
 }

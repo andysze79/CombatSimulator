@@ -4,7 +4,7 @@ using UnityEngine;
 using Sirenix.OdinInspector;
 using System.Linq;
 
-public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
+public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagable, IHealthBehavior
 {
     public bool m_ConnectWithStateMachine;
     [ReadOnly] [SerializeField] private bool EnableCombo;
@@ -45,11 +45,30 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     public List<Collider> SortedTarget = new List<Collider>();
 
     public Vector3 moveValue;
+    public delegate void StateMachineDel();
+    public StateMachineDel WhenGetDamage;
+
+    public event System.Action<float> OnHealthPercentageChanged;
 
     Coroutine LockOnProcess { get; set; }
+
+    public float MaxHealth { get { return referenceKeeper.PlayerData.MaxHealth; } }
+
+    public float CurrentHealth { get; set; }
+    public float HealthPercentage { get; set; }
+    public Transform HealthObject { get; set; }
+
+    private void OnEnable()
+    {
+        referenceKeeper = GetComponent<ReferenceKeeper>();
+        HealthModule.SetUpHealth(this, referenceKeeper.PlayerData.CharacterController.transform);        
+        EventHandler.WhenPlayerSpawned?.Invoke(referenceKeeper.PlayerLogic);
+    }
+
     private void Update()
     {
         referenceKeeper.AnimationPlayer.AnimatorRef.SetBool(referenceKeeper.PlayerData.isGroundedName, CheckGrounded());
+        referenceKeeper.AnimationPlayer.AnimatorRef.SetBool(referenceKeeper.PlayerData.isInAirName, CheckisInAir());
         
         if(!referenceKeeper.PlayerData.m_LockOn)
             SearchEnemyContinuously();
@@ -58,8 +77,6 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     #region Assign Delegate
     private void Start()
     {
-        referenceKeeper = GetComponent<ReferenceKeeper>();
-
         #region Melee animation Delegate
         referenceKeeper.AnimationPlayer.WhenCheckComboStart += ComboCheckStart;
         referenceKeeper.AnimationPlayer.WhenCheckComboStart += SlowDownComboTime;
@@ -170,16 +187,16 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
         UserControllerGetter.Instance.Joystick1InputDelegate += CheckRotate;        
         UserControllerGetter.Instance.Joystick1InputDelegate += SetAnimatorFloat;
 
-        UserControllerGetter.Instance.JumpUpDelegate += CheckJump;
-        UserControllerGetter.Instance.DashUpDelegate += CheckDash;
+        UserControllerGetter.Instance.JumpDownDelegate += CheckJump;
+        UserControllerGetter.Instance.DashDownDelegate += CheckDash;
     }
     public void DeactivateMove() {
         UserControllerGetter.Instance.Joystick1InputDelegate -= CheckMove;
         UserControllerGetter.Instance.Joystick1InputDelegate -= CheckRotate;        
         UserControllerGetter.Instance.Joystick1InputDelegate -= SetAnimatorFloat;        
 
-        UserControllerGetter.Instance.JumpUpDelegate -= CheckJump;
-        UserControllerGetter.Instance.DashUpDelegate -= CheckDash;
+        UserControllerGetter.Instance.JumpDownDelegate -= CheckJump;
+        UserControllerGetter.Instance.DashDownDelegate -= CheckDash;
     }    
     private void CheckMove(float horizontal, float vertical) {
 
@@ -221,24 +238,38 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
         referenceKeeper.AnimationPlayer.AnimatorRef.SetFloat(referenceKeeper.PlayerData.RunVerticalName, vertical);
     }
 
-    private void CharacterFacingEnemy() {
+    public void CharacterFacingEnemy(float facingSpeed) {
         if (targetCollider == null) return;
 
         var lookDir = targetCollider.transform.position - referenceKeeper.PlayerData.CharacterController.transform.position;
         lookDir.y = 0;
         lookDir = lookDir.normalized;
-
-        referenceKeeper.PlayerData.CharacterController.transform.rotation = Quaternion.LookRotation(lookDir);    
+        
+        var newDir = Quaternion.LookRotation(lookDir); 
+        referenceKeeper.PlayerData.CharacterController.transform.rotation = Quaternion.Lerp(
+            referenceKeeper.PlayerData.CharacterController.transform.rotation, 
+            newDir,
+            Time.deltaTime * facingSpeed); 
     }
 
     #region Jump
-    private bool CheckGrounded() {
+    public bool CheckGrounded() {
         return Physics.CheckSphere(
             referenceKeeper.PlayerData.CharacterController.transform.position, 
             referenceKeeper.PlayerData.CheckGroundedSphereRadius,
             referenceKeeper.PlayerData.CheckGroundedLayer);        
     }
-    
+    public bool CheckisInAir()
+    {
+        Vector3 pos= referenceKeeper.PlayerData.CharacterController.transform.position;
+        Ray ray = new Ray(pos, -referenceKeeper.PlayerData.transform.up);
+        RaycastHit hitInfo = new RaycastHit();
+        bool result = Physics.Raycast(ray, out hitInfo, float.PositiveInfinity,referenceKeeper.PlayerData.CheckGroundedLayer);
+
+        if (!result) return true;
+
+        return Vector3.Distance(hitInfo.point, pos) >= referenceKeeper.PlayerData.isInAirDistance; 
+    }
     private void CheckJump()
     {
         if (!CheckGrounded() || referenceKeeper.PlayerData.JumpCD) return;
@@ -287,7 +318,18 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
 
         SetAnimatorTrigger(referenceKeeper.PlayerData.DashName);
 
+        StartCoroutine(Dashing());
         StartCoroutine(DashCoolDown());
+    }
+    private IEnumerator Dashing() {
+        var startTime = Time.time;
+        var endTime = referenceKeeper.PlayerData.DashDuration;
+
+        while (Time.time - startTime < endTime) {
+            referenceKeeper.PlayerData.CharacterController.Move(
+            referenceKeeper.PlayerData.CharacterController.transform.forward * referenceKeeper.PlayerData.DashForce * Time.deltaTime);
+            yield return null;
+        }
     }
     #endregion
 
@@ -298,18 +340,12 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
         UserControllerGetter.Instance.Fight1UpDelegate += Melee1Attack;
         UserControllerGetter.Instance.Fight2DownDelegate += Melee2ButtonDown;
         UserControllerGetter.Instance.Fight2UpDelegate += Melee2Attack;
-
-        UserControllerGetter.Instance.Fight1DownDelegate += CharacterFacingEnemy;
-        UserControllerGetter.Instance.Fight2DownDelegate += CharacterFacingEnemy;
     }
     public void DeactivateMelee()
     {
         UserControllerGetter.Instance.Fight1UpDelegate -= Melee1Attack;
         UserControllerGetter.Instance.Fight2DownDelegate -= Melee2ButtonDown;
         UserControllerGetter.Instance.Fight2UpDelegate -= Melee2Attack;
-
-        UserControllerGetter.Instance.Fight1DownDelegate -= CharacterFacingEnemy;
-        UserControllerGetter.Instance.Fight2DownDelegate -= CharacterFacingEnemy;
     }    
     public void Melee1Attack() 
     {
@@ -518,6 +554,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     private void CameraRotation(float horizontal, float vertical)
     {
         Vector2 input = new Vector2(horizontal, vertical);
+
         // if there is an input and camera position is not fixed
         if (input.sqrMagnitude >= _threshold && !referenceKeeper.PlayerData.LockCameraPosition)
         {
@@ -900,7 +937,19 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     }
     #endregion
     
-    #region Coroutine Section
+    #region Hit
+    public void OnReceiveDamage(float damageAmount, float pushBackDistance, float duration, AnimationCurve movement, Transform attacker)
+    {
+        WhenGetDamage?.Invoke();
+        EventHandler.WhenReceiveDamage?.Invoke();
+        HealthModule.ChangeHealth(this, -damageAmount);
+        OnHealthPercentageChanged(HealthPercentage);
+        CharacterFacingEnemy(referenceKeeper.PlayerData.FacingEnemySpeed);
+        SetAnimatorTrigger(referenceKeeper.PlayerData.HitKnockbackName);
+    }
+    #endregion
+
+    #region Coroutine Section   
     private IEnumerator HitVFXTriggerLifeTime() {
         referenceKeeper.PlayerData.HitVFXTrigger.SetActive(true);
         yield return new WaitForSeconds(.1f);
@@ -936,7 +985,6 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
         referenceKeeper.PlayerData.SwitchTargetCD = false;
     }
     #endregion
-
 
     private void SlowDownComboTime() {
         for (int i = 0; i < referenceKeeper.PlayerData.EnableSlowMoWhenCheckTheseCombo.Length; i++)
@@ -985,18 +1033,21 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface
     private void SetAnimatorTrigger(string name) {
         referenceKeeper.AnimationPlayer.AnimatorRef.SetTrigger(name);    
     }
+    
     private void OnDrawGizmos()
     {
         if (referenceKeeper == null) return;
 
-        Gizmos.color = Color.red;
+        //Gizmos.color = Color.red;
 
-        Debug.DrawLine(transform.position, transform.position + transform.up * referenceKeeper.PlayerData.JumpHight);
+        //Debug.DrawLine(transform.position, transform.position + transform.up * referenceKeeper.PlayerData.JumpHight);
 
-        Gizmos.DrawWireSphere(referenceKeeper.PlayerData.CharacterController.transform.position, referenceKeeper.PlayerData.CheckGroundedSphereRadius);
+        //Gizmos.DrawWireSphere(referenceKeeper.PlayerData.CharacterController.transform.position, referenceKeeper.PlayerData.CheckGroundedSphereRadius);
 
-        Gizmos.color = new Color(1,0,0,.3f);
+        //Gizmos.color = new Color(1,0,0,.3f);
 
-        Gizmos.DrawSphere(referenceKeeper.PlayerData.CharacterController.transform.position, referenceKeeper.PlayerData.SearchRadius);
+        //Gizmos.DrawSphere(referenceKeeper.PlayerData.CharacterController.transform.position, referenceKeeper.PlayerData.SearchRadius);
     }
+
+    
 }

@@ -8,4 +8,9 @@ public class IdleAction : Action
     {
         controller.navMeshAgent.isStopped = true;
     }
+
+    public override void Initialize(StateController controller)
+    {
+        
+    }
 }

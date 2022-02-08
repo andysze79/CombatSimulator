@@ -6,19 +6,24 @@ using UnityEngine;
 public class State : ScriptableObject
 {
     public enum AnimationTriggerName { 
-        Idle, Run, Attack, Hit, None
+        Idle, Run, Attack, Hit, Death, None
     }    
     public Action[] actions;
     public Transition[] transitions;
     public AnimationTriggerName playThisAnimation;
     public Color sceneGizmoColor = Color.grey;
-
+    public void EnterState(StateController controller) {
+        for (int i = 0; i < actions.Length; i++)
+        {
+            actions[i].Initialize(controller);
+        }
+    }
+    public void ExitState(StateController controller) { }
     public void UpdateState(StateController controller) {
         DoActions(controller);
         CheckTransitions(controller);
     }
-    private void DoActions(StateController controller) {
-        
+    private void DoActions(StateController controller) {        
         for (int i = 0; i < actions.Length; i++)
         {
             actions[i].Act(controller);

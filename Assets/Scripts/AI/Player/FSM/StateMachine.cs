@@ -17,8 +17,10 @@ namespace CombateSimulator.PlayerFSM
         public PlayerDataHolder playerData{ get; set; }
         public PlayerLogic playerLogic{ get; set; }
 
-        protected void Start()
+        protected void Awake()
         {
+            GetReference();
+
             var states = GetComponents<State>();
             
             foreach (var state in states)
@@ -27,8 +29,6 @@ namespace CombateSimulator.PlayerFSM
             }
             
             EnterState(m_InitialState.GetType());
-
-            GetReference();
         }
         private void GetReference() {
             referenceKeeper = GetComponent<ReferenceKeeper>();

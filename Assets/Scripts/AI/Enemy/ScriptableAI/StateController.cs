@@ -1,8 +1,9 @@
-﻿using System.Collections;
+﻿using CombateSimulator.EnemyAI;
+using Sirenix.OdinInspector;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-using Sirenix.OdinInspector;
 
 public class StateController : MonoBehaviour
 {
@@ -26,7 +27,7 @@ public class StateController : MonoBehaviour
     Coroutine AttackCDProgress { get; set; }
 
     void Awake()
-    {
+    {        
         enemyStats = GetComponent<EnemyData>();
         enemyLogic = GetComponent<EnemyLogic>();
         navMeshAgent = GetComponent<NavMeshAgent>();
@@ -71,7 +72,7 @@ public class StateController : MonoBehaviour
         if (currentState != null && eyes != null)
         {
             Gizmos.color = currentState.sceneGizmoColor;
-            Gizmos.DrawWireSphere(eyes.position, 1);// enemyStats.lookSphereCastRadius);
+            Gizmos.DrawWireSphere(eyes.position, .1f);
         }        
     }
 
@@ -79,9 +80,11 @@ public class StateController : MonoBehaviour
     {
         if (nextState != remainState)
         {
-            print(nextState);
+            //print(nextState);
             previousState = currentState;
             currentState = nextState;
+            previousState.ExitState(this);
+            currentState.EnterState(this);
             OnExitState();
 
             if(currentState.playThisAnimation != State.AnimationTriggerName.None)
@@ -94,7 +97,10 @@ public class StateController : MonoBehaviour
         stateTimeElapsed += Time.deltaTime;
         return (stateTimeElapsed >= duration);
     }
-
+    public WayPointInfo GetCurrentWayPointIndo() {
+        wayPointList[nextWayPoint].TryGetComponent<WayPointInfo>(out WayPointInfo info);
+        return info;
+    }
     private void OnExitState()
     {
         stateTimeElapsed = 0;
@@ -102,13 +108,17 @@ public class StateController : MonoBehaviour
     public bool CheckCurrentAnimationEnded(string animationName) {
         bool isTargetAnimation = animator.GetCurrentAnimatorStateInfo(0).IsName(animationName);
         bool isTargetAnimationFinished = animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= .95f;
-        return isTargetAnimation && isTargetAnimationFinished;
+        //print(isTargetAnimation + " is target animation");
+        return !isTargetAnimation || isTargetAnimationFinished;
     }
     private void SetAnimationTrigger(string name) {
         animator.SetTrigger(name);
     }
-    private void ReceiveDamage() {
-        if(HitState) TransitionToState(HitState);
+    private void ReceiveDamage(Transform target) {
+        if (HitState == null) { Debug.Log(transform.name + " need Hit State"); return; }
+        if (chaseTarget == null) { Debug.Log(target.name); chaseTarget = target; }
+        
+        TransitionToState(HitState);
     }
     public void StartAttackCD() {
         if (AttackCDProgress != null)

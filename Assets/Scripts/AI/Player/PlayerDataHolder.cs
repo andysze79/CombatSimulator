@@ -19,6 +19,8 @@ public class PlayerDataHolder : MonoBehaviour
     public float CameraAngleOverride = 0.0f;
     [Tooltip("For locking the camera position on all axis")]
     public bool LockCameraPosition = false;
+    [Header("Health Settings")]
+    [SerializeField] private float m_MaxHealth = 100;
     [Header("Move State")]
     [SerializeField] private CharacterController m_CharacterController;
     [SerializeField] private float m_MoveSpeed;
@@ -28,11 +30,18 @@ public class PlayerDataHolder : MonoBehaviour
     [SerializeField] private string m_RunVerticalName;
     [SerializeField] private float m_CheckGroundedSphereRadius;
     [SerializeField] private LayerMask m_CheckGroundedLayer;
+    [SerializeField] private float m_isInAirDistance;
     [SerializeField] private float m_JumpHight;
     [SerializeField] private float m_JumpGravityMultiplier = 2f;
-    [SerializeField] private float m_JumpCDTime;
+    [SerializeField] private float m_JumpCDTime;    
     [Header("Dash State")]
+    [SerializeField] private float m_DashForce;    
+    [SerializeField] private float m_DashDuration;  
+    [SerializeField] private AnimationCurve m_DashMovement;  
     [SerializeField] private float m_DashCDTime;    
+    [Header("Hit State")]
+    [SerializeField] private float m_StunDuration;    
+    [SerializeField] private float m_FacingEnemySpeed;    
     [Header("Attack State")]
     [SerializeField] private float m_LockOnPitchOffset;
     [SerializeField] private bool m_InputCD;
@@ -41,9 +50,13 @@ public class PlayerDataHolder : MonoBehaviour
     [FoldoutGroup("Animator Trigger Name")]
     [SerializeField] private string m_DashName;
     [FoldoutGroup("Animator Trigger Name")]
+    [SerializeField] private string m_HitKnockbackName;
+    [FoldoutGroup("Animator Trigger Name")]
     [SerializeField] private string m_JumpName;
     [FoldoutGroup("Animator Trigger Name")]
     [SerializeField] private string m_isGroundedName;
+    [FoldoutGroup("Animator Trigger Name")]
+    [SerializeField] private string m_isInAirName;
     [FoldoutGroup("Animator Trigger Name")]
     [SerializeField] private string m_Melee1Name;
     [FoldoutGroup("Animator Trigger Name")]
@@ -73,6 +86,7 @@ public class PlayerDataHolder : MonoBehaviour
     [SerializeField] private float m_SearchRadius;
     [SerializeField] private LayerMask m_SearchLayer;
     [Min(.2f)][SerializeField] private float m_SwitchTargetCDTime;
+    [SerializeField] private float m_FacingTargetSpeed = 10;
 
     [FoldoutGroup("Combo Setting")]
     [SerializeField] private EnumHolder.ComboCounter m_Melee1LastCombo;
@@ -129,6 +143,7 @@ public class PlayerDataHolder : MonoBehaviour
 
     public Camera _3rdPersonCamera { get { return m_3rdPersonCamera; } }
     public float RotationSmoothTime { get { return m_RotationSmoothTime; } }
+    public float MaxHealth { get { return m_MaxHealth; } }
     public CharacterController CharacterController { get { return m_CharacterController; } }
     public float MoveSpeed { get { return m_MoveSpeed; } }
     public float RotateSpeed { get { return m_RotateSpeed; } }
@@ -137,11 +152,18 @@ public class PlayerDataHolder : MonoBehaviour
     public string RunVerticalName { get { return m_RunVerticalName; } }
     public float CheckGroundedSphereRadius { get { return m_CheckGroundedSphereRadius; } }
     public LayerMask CheckGroundedLayer { get { return m_CheckGroundedLayer; } }    
+    public float isInAirDistance { get { return m_isInAirDistance; } }    
     public float JumpHight { get { return m_JumpHight; } }    
     public float JumpGravityMultiplier { get {return m_JumpGravityMultiplier; } }
     public float JumpCDTime { get {return m_JumpCDTime; } }
+    public float DashForce { get {return m_DashForce; } }
+    public float DashDuration { get {return m_DashDuration; } }
+    public AnimationCurve DashMovement { get {return m_DashMovement; } }
     public float DashCDTime { get {return m_DashCDTime; } }
+    public float StunDuration { get {return m_StunDuration; } }
+    public float FacingEnemySpeed { get {return m_FacingEnemySpeed; } }
     public float SwitchTargetCDTime { get {return m_SwitchTargetCDTime; } }
+    public float FacingTargetSpeed { get {return m_FacingTargetSpeed; } }
     public bool JumpCD { get; set; }
     public bool DashCD { get; set; }
     public bool SwitchTargetCD { get; set; }
@@ -150,8 +172,10 @@ public class PlayerDataHolder : MonoBehaviour
     public float InputCDTime { get { return m_InputCDTime; } }
     public EnumHolder.AttackStyle CurrentAttackStyle { get { return m_CurrentAttackStyle; }set { m_CurrentAttackStyle = value; } }
     public string DashName { get { return m_DashName; } }
+    public string HitKnockbackName { get { return m_HitKnockbackName; } }
     public string JumpName { get { return m_JumpName; } }
     public string isGroundedName { get { return m_isGroundedName; } }
+    public string isInAirName { get { return m_isInAirName; } }
     public string Melee1Name { get { return m_Melee1Name; } }
     public string Melee2Name { get { return m_Melee2Name; } }
     public string Melee3Name { get { return m_Melee3Name; } }

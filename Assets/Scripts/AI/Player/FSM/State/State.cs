@@ -14,6 +14,28 @@ namespace CombateSimulator.PlayerFSM
         protected abstract void OnEnable();
         protected abstract void OnDisable();
         protected abstract void Update();
-        protected abstract void Trasnsition();
+        protected virtual void WhenReceiveJoystick1Input(float horizontal, float vertical)
+        {
+            
+        }
+        protected virtual void WhenReceiveJump()
+        {
+            
+        }
+        protected virtual void WhenReceiveFight1Up()
+        {
+            
+        }
+        protected virtual void WhenReceiveFight2Down()
+        {
+            
+        }
+        protected virtual void WhenReceiveFight2Up()
+        {
+            
+        }
+        protected void WhenGetDamage() {
+            stateMachine.EnterState(typeof(Hit));
+        }
     }
 }

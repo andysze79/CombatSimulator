@@ -135,7 +135,7 @@ Material:
     - _RimPower: 1.5
     - _SAAThreshold: 0.2
     - _ScreenSpaceVariance: 0.1
-    - _Smoothness: 0.8
+    - _Smoothness: 0.689
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -155,4 +155,4 @@ Material:
     - _Color: {r: 0.3019608, g: 0.3019608, b: 0.3019608, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 0}
     - _RimColor: {r: 0, g: 0, b: 0, a: 1}
-    - _SpecColor: {r: 1, g: 1, b: 1, a: 1}
+    - _SpecColor: {r: 0.3679245, g: 0.35751155, b: 0.35751155, a: 1}

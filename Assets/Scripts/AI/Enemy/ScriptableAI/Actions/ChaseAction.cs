@@ -8,6 +8,12 @@ public class ChaseAction : Action
     {
         Chase(controller);
     }
+
+    public override void Initialize(StateController controller)
+    {
+        
+    }
+
     private void Chase(StateController controller) {
         controller.navMeshAgent.destination = controller.chaseTarget.position;
         controller.navMeshAgent.isStopped = false;

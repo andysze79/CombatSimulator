@@ -8,6 +8,12 @@ public class PatrolAction : Action
     {
         Patrol(controller);
     }
+
+    public override void Initialize(StateController controller)
+    {
+        
+    }
+
     private void Patrol(StateController controller) {
         controller.navMeshAgent.destination = controller.wayPointList[controller.nextWayPoint].position;
         controller.navMeshAgent.isStopped = false;

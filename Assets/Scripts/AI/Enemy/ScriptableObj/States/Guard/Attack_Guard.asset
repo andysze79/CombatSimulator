@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 856d4dc457be511419884d134d9af603, type: 3}
+  m_Name: Attack_Guard
+  m_EditorClassIdentifier: 
+  actions:
+  - {fileID: 11400000, guid: 1d9a0bf56d922304c8bec4b809b8c714, type: 2}
+  - {fileID: 11400000, guid: fc7e726b6cda2ed4292313858b27530a, type: 2}
+  transitions:
+  - decision:
+    - {fileID: 11400000, guid: 974d8b88b6e560f4c8d8e8a2b1099039, type: 2}
+    logic: 0
+    trueState: {fileID: 11400000, guid: 6064bdad9736a4b4abfbaf0ce6e4aced, type: 2}
+    falseState: {fileID: 11400000, guid: bc4ab764f1eeb334fb0d008b3d7e5e74, type: 2}
+  playThisAnimation: 2
+  sceneGizmoColor: {r: 1, g: 0, b: 0, a: 1}

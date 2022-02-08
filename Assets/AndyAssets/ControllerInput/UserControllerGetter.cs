@@ -47,7 +47,7 @@ public class UserControllerGetter : MonoBehaviour
     public bool Fight2Value { get; set; }
     public bool Fight3Value { get; set; }
 
-    public delegate void Joystick1Input(float HorizontalValue, float VerticalValue);
+    public delegate void Joystick1Input(float HorizontalValue, float VerticalValue);    
     public Joystick1Input MouseInputDelegate; 
     public Joystick1Input Joystick1InputDelegate; 
     public delegate void Fight1();
@@ -94,7 +94,6 @@ public class UserControllerGetter : MonoBehaviour
             if (m_Controller == Controller.Keyboard)
             {
                 MouseX = Input.GetAxis(m_MouseX);
-
                 MouseY = Input.GetAxis(m_MouseY);
 
                 MouseInputDelegate?.Invoke(MouseX, MouseY);

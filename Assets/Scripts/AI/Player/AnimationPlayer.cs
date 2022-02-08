@@ -14,11 +14,11 @@ public class AnimationPlayer : MonoBehaviour
     public AnimationEventCombo WhenTurnOnDamageTrigger;
     public AnimationEventCombo WhenTurnOffDamageTrigger;
     public Animator AnimatorRef { get; set; }
-    public ReferenceKeeper ReferenceKeeper { get; set; }
-    private void Awake()
+    //public ReferenceKeeper ReferenceKeeper { get; set; }
+    protected virtual void Awake()
     {
         AnimatorRef = GetComponent<Animator>();
-        ReferenceKeeper = GetComponentInParent<ReferenceKeeper>();
+        //ReferenceKeeper = GetComponentInParent<ReferenceKeeper>();
     }
     public void PlayAnimation(string name) {
         AnimatorRef.SetTrigger(name);

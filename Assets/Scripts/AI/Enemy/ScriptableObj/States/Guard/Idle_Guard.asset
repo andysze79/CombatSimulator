@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 856d4dc457be511419884d134d9af603, type: 3}
+  m_Name: Idle_Guard
+  m_EditorClassIdentifier: 
+  actions:
+  - {fileID: 11400000, guid: 531c9ef341e1fa74a9b59084a4e22f64, type: 2}
+  transitions:
+  - decision:
+    - {fileID: 11400000, guid: 4358c6306419253428ed9966170eeeba, type: 2}
+    logic: 0
+    trueState: {fileID: 11400000, guid: bc4ab764f1eeb334fb0d008b3d7e5e74, type: 2}
+    falseState: {fileID: 11400000, guid: c2e7ba71c9aca02408802455c1373019, type: 2}
+  - decision:
+    - {fileID: 11400000, guid: 3be6ac8baa0278f40a1a8a634949d5d6, type: 2}
+    logic: 0
+    trueState: {fileID: 11400000, guid: bc4ab764f1eeb334fb0d008b3d7e5e74, type: 2}
+    falseState: {fileID: 11400000, guid: fe6206bc884abae44ae551b9610c8e36, type: 2}
+  - decision:
+    - {fileID: 11400000, guid: 3be6ac8baa0278f40a1a8a634949d5d6, type: 2}
+    - {fileID: 11400000, guid: c95882aba4df47b4ba576f11ad955493, type: 2}
+    logic: 1
+    trueState: {fileID: 11400000, guid: aa9060d42c2c3e54da2391ab51bd4789, type: 2}
+    falseState: {fileID: 11400000, guid: bc4ab764f1eeb334fb0d008b3d7e5e74, type: 2}
+  playThisAnimation: 0
+  sceneGizmoColor: {r: 1, g: 1, b: 1, a: 1}

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 856d4dc457be511419884d134d9af603, type: 3}
+  m_Name: Hit_Guard
+  m_EditorClassIdentifier: 
+  actions:
+  - {fileID: 11400000, guid: 21c4c7f0a585df74dbf11bdda7a84322, type: 2}
+  transitions:
+  - decision:
+    - {fileID: 11400000, guid: ae88ad339353c444a86023b4635f82d4, type: 2}
+    logic: 1
+    trueState: {fileID: 11400000, guid: fe6206bc884abae44ae551b9610c8e36, type: 2}
+    falseState: {fileID: 11400000, guid: bc4ab764f1eeb334fb0d008b3d7e5e74, type: 2}
+  - decision:
+    - {fileID: 11400000, guid: aaec4c46a96894946bb175213a2956cc, type: 2}
+    logic: 1
+    trueState: {fileID: 11400000, guid: 6c3d4034cf0804e4a8265f8a4c40ad1e, type: 2}
+    falseState: {fileID: 11400000, guid: bc4ab764f1eeb334fb0d008b3d7e5e74, type: 2}
+  playThisAnimation: 3
+  sceneGizmoColor: {r: 0.5188679, g: 0.015358231, b: 0, a: 1}

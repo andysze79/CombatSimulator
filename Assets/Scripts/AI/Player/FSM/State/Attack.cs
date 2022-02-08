@@ -6,24 +6,31 @@ namespace CombateSimulator.PlayerFSM
 {
     public class Attack : State
     {
-        protected override void OnDisable()
-        {
-            throw new System.NotImplementedException();
-        }
-
         protected override void OnEnable()
         {
-            throw new System.NotImplementedException();
+            stateMachine.playerLogic.ActivateCamera();
+            stateMachine.playerLogic.ActivateMelee();
+            //stateMachine.playerLogic.ActivateMove();
+            stateMachine.playerLogic.ActivateLockOnTarget();
         }
-
-        protected override void Trasnsition()
+        protected override void OnDisable()
         {
-            throw new System.NotImplementedException();
+            stateMachine.playerLogic.DeactivateCamera();
+            stateMachine.playerLogic.DeactivateMelee();
+            //stateMachine.playerLogic.DeactivateMove();
+            stateMachine.playerLogic.DeactivateLockOnTarget();
         }
-
         protected override void Update()
         {
-            throw new System.NotImplementedException();
+            stateMachine.playerLogic.CharacterFacingEnemy(stateMachine.playerData.FacingTargetSpeed);
+            if (stateMachine.playerLogic.CheckGrounded() && stateMachine.playerData.CurrentAttackStyle == EnumHolder.AttackStyle.None)
+            {
+                stateMachine.EnterState(typeof(Idle));
+            }
+            else if(!stateMachine.playerLogic.CheckGrounded())
+            { 
+                stateMachine.EnterState(typeof(Idle));            
+            }
         }
     }
 }

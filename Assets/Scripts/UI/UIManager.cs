@@ -19,10 +19,12 @@ public class UIManager : MonoBehaviour
     public Image m_TargetRadical;
     public float m_TargetRadicalYOffsetRate = 1.2f;
     public Camera MainCamera { get; set; }
+    public HealthbarController HealthbarController { get; set; }
     Coroutine StickTargetSignProcess;
     private void OnEnable()
-    {
+    {   
         MainCamera = Camera.main;
+        HealthbarController = GetComponent<HealthbarController>();
         EventHandler.WhenLockOnTarget += ShowTargetSign;
         EventHandler.WhenUnlockTarget += HideTargetSign;
     }
@@ -48,11 +50,16 @@ public class UIManager : MonoBehaviour
 
         m_TargetRadical.gameObject.SetActive(true);
 
-        while (true)
+        while (target)
         {
-            screenPos = MainCamera.WorldToScreenPoint(target.position + new Vector3(0, target.GetComponentInChildren<CapsuleCollider>().height * m_TargetRadicalYOffsetRate, 0));
+            screenPos = MainCamera.WorldToScreenPoint(
+                target.position + 
+                new Vector3(0, target.GetComponentInChildren<CapsuleCollider>().height * m_TargetRadicalYOffsetRate, 0));
+
             m_TargetRadical.rectTransform.position = screenPos;
             yield return null;
         }
+
+        m_TargetRadical.gameObject.SetActive(false);
     }
 }
