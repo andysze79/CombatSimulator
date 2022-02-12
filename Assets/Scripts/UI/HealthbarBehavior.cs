@@ -12,12 +12,13 @@ public class HealthbarBehavior : MonoBehaviour
     [SerializeField]private AnimationCurve m_Movement;
     public IHealthBehavior healthBehavior;
     Coroutine BufferProcess { get; set; }
+    
     public void SetHealth(IHealthBehavior healthBehavior) {
         this.healthBehavior = healthBehavior;
-        print(healthBehavior.HealthObject.name);
+        //print(healthBehavior.HealthObject.name);
         healthBehavior.OnHealthPercentageChanged += OnHealthChanged;
     }    
-    private void OnHealthChanged(float percentage) { 
+    private void OnHealthChanged(float percentage) {
         m_Health.fillAmount = healthBehavior.CurrentHealth / healthBehavior.MaxHealth;
         
         if (BufferProcess != null)

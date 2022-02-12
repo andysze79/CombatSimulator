@@ -52,6 +52,8 @@ public class PlayerDataHolder : MonoBehaviour
     [FoldoutGroup("Animator Trigger Name")]
     [SerializeField] private string m_HitKnockbackName;
     [FoldoutGroup("Animator Trigger Name")]
+    [SerializeField] private string m_ReflectName;
+    [FoldoutGroup("Animator Trigger Name")]
     [SerializeField] private string m_JumpName;
     [FoldoutGroup("Animator Trigger Name")]
     [SerializeField] private string m_isGroundedName;
@@ -129,6 +131,8 @@ public class PlayerDataHolder : MonoBehaviour
     [FoldoutGroup("VFX Settings")]
     [SerializeField] private GameObject m_HitVFX;
     [FoldoutGroup("VFX Settings")]
+    [SerializeField] private ParticleSystem m_DashVFX;
+    [FoldoutGroup("VFX Settings")]
     public UltEvent m_WhenStartCharge;
     [FoldoutGroup("VFX Settings")]
     public UltEvent m_WhenFinsihedCharge;
@@ -173,6 +177,7 @@ public class PlayerDataHolder : MonoBehaviour
     public EnumHolder.AttackStyle CurrentAttackStyle { get { return m_CurrentAttackStyle; }set { m_CurrentAttackStyle = value; } }
     public string DashName { get { return m_DashName; } }
     public string HitKnockbackName { get { return m_HitKnockbackName; } }
+    public string ReflectName { get { return m_ReflectName; } }
     public string JumpName { get { return m_JumpName; } }
     public string isGroundedName { get { return m_isGroundedName; } }
     public string isInAirName { get { return m_isInAirName; } }
@@ -197,6 +202,7 @@ public class PlayerDataHolder : MonoBehaviour
     public ParticleSystem[] Melee2ComboVFX { get { return m_Melee2ComboVFX; } }
     public ParticleSystem[] Melee3ComboVFX { get { return m_Melee3ComboVFX; } }
     public GameObject HitVFX { get { return m_HitVFX; } }
+    public ParticleSystem DashVFX { get { return m_DashVFX; } }
     public EnumHolder.ComboCounter[] EnableSlowMoWhenCheckTheseCombo { get { return m_EnableSlowMoWhenCheckTheseCombo; } }
     public bool AttackCD { get; set; }
     public float LockOnCamTransitionSpeed { get { return m_LockOnCamTransitionSpeed; } }

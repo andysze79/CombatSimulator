@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerHealthbar : HealthbarBehavior
 {
-    private void OnEnable()
+    private void Awake()
     {
         EventHandler.WhenPlayerSpawned += SetUpPlayer;
     }
@@ -12,7 +12,7 @@ public class PlayerHealthbar : HealthbarBehavior
     {
         EventHandler.WhenPlayerSpawned -= SetUpPlayer;        
     }
-    private void SetUpPlayer(PlayerLogic player) {        
+    private void SetUpPlayer(PlayerLogic player) {
         SetHealth(player);
     }
     protected override void LateUpdate()

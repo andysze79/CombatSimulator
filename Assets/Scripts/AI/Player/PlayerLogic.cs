@@ -4,7 +4,7 @@ using UnityEngine;
 using Sirenix.OdinInspector;
 using System.Linq;
 
-public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagable, IHealthBehavior
+public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagable, IHealthBehavior, IAnimationEvent
 {
     public bool m_ConnectWithStateMachine;
     [ReadOnly] [SerializeField] private bool EnableCombo;
@@ -49,20 +49,20 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     public StateMachineDel WhenGetDamage;
 
     public event System.Action<float> OnHealthPercentageChanged;
-
+    
+    List<GameObject> AssignedTrigger = new List<GameObject>();
     Coroutine LockOnProcess { get; set; }
-
+    private ParticleSystem CurrentAttackVFX { get; set; }
     public float MaxHealth { get { return referenceKeeper.PlayerData.MaxHealth; } }
-
     public float CurrentHealth { get; set; }
     public float HealthPercentage { get; set; }
     public Transform HealthObject { get; set; }
+    private DamageTrigger HitTrigger { get; set; }
+    [ShowInInspector]private bool AttackSuccess = true;// { get; set; }
 
     private void OnEnable()
     {
-        referenceKeeper = GetComponent<ReferenceKeeper>();
-        HealthModule.SetUpHealth(this, referenceKeeper.PlayerData.CharacterController.transform);        
-        EventHandler.WhenPlayerSpawned?.Invoke(referenceKeeper.PlayerLogic);
+        referenceKeeper = GetComponent<ReferenceKeeper>();       
     }
 
     private void Update()
@@ -77,6 +77,9 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     #region Assign Delegate
     private void Start()
     {
+        HealthModule.SetUpHealth(this, referenceKeeper.PlayerData.CharacterController.transform);
+        EventHandler.WhenPlayerSpawned.Invoke(referenceKeeper.PlayerLogic);
+
         #region Melee animation Delegate
         referenceKeeper.AnimationPlayer.WhenCheckComboStart += ComboCheckStart;
         referenceKeeper.AnimationPlayer.WhenCheckComboStart += SlowDownComboTime;
@@ -92,8 +95,9 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         AssignTriggerDelegate(referenceKeeper.PlayerData.Melee2ComboTrigger, true);
         AssignTriggerDelegate(referenceKeeper.PlayerData.Melee3ComboTrigger, true);
         
-        if (referenceKeeper.PlayerData.HitVFXTrigger.TryGetComponent(out DamageTrigger HitTrigger)) 
-        {            
+        if (referenceKeeper.PlayerData.HitVFXTrigger.TryGetComponent(out DamageTrigger hitTrigger))
+        {
+            HitTrigger = hitTrigger;
             HitTrigger.TriggerEnter += PlayHitVFX;
         }
         #endregion
@@ -112,6 +116,11 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         }
         
         foreach (var smb in referenceKeeper.AnimationPlayer.AnimatorRef.GetBehaviours<MatchLandPositionSMB>())
+        {
+            smb.target = this;
+        }
+
+        foreach (var smb in referenceKeeper.AnimationPlayer.AnimatorRef.GetBehaviours<AnimationEventSMB>())
         {
             smb.target = this;
         }
@@ -140,8 +149,9 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         AssignTriggerDelegate(referenceKeeper.PlayerData.Melee3ComboTrigger, false);
         #endregion
 
-        if (referenceKeeper.PlayerData.HitVFXTrigger.TryGetComponent(out DamageTrigger HitTrigger))
+        if (referenceKeeper.PlayerData.HitVFXTrigger.TryGetComponent(out DamageTrigger hitTrigger))
         {
+            HitTrigger = hitTrigger;
             HitTrigger.TriggerEnter -= PlayHitVFX;
         }
 
@@ -152,33 +162,28 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         DeactivateLockOnTarget();
     }
     private void AssignTriggerDelegate(GameObject[] meleeComboTrigger, bool AssignOrRelease) {
-        DamageTrigger trigger;
-        List<GameObject> AssignedTrigger = new List<GameObject>();
+        DamageTrigger trigger;        
 
         for (int i = 0; i < meleeComboTrigger.Length; i++)
         {
-            if (CheckAlreadyAssignedDelegate(AssignedTrigger, meleeComboTrigger[i])) continue;
-            AssignedTrigger.Add(meleeComboTrigger[i]);
+            if (AssignedTrigger.Contains(meleeComboTrigger[i])) continue;
 
             trigger = meleeComboTrigger[i].GetComponent<DamageTrigger>();
 
-            if(AssignOrRelease)
-                trigger.TriggerEnter += DealDamage;
+            if (AssignOrRelease)
+            { 
+                trigger.TriggerEnter += CheckAttackEnemySuccess; 
+                trigger.TriggerEnter += DealDamage; 
+            }
             else
-                trigger.TriggerEnter -= DealDamage;
-        }
-    }
-    private bool CheckAlreadyAssignedDelegate(List<GameObject> assignedList, GameObject target) {
-        var result = false;
+            { 
+                trigger.TriggerEnter -= CheckAttackEnemySuccess; 
+                trigger.TriggerEnter -= DealDamage; 
+            }
 
-        for (int i = 0; i < assignedList.Count; i++)
-        {
-            if (assignedList[i] == target)
-                result = true;
+            AssignedTrigger.Add(meleeComboTrigger[i]);
         }
-
-        return result;
-    }
+    }    
     #endregion
 
     #region Moving
@@ -318,6 +323,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
 
         SetAnimatorTrigger(referenceKeeper.PlayerData.DashName);
 
+        referenceKeeper.PlayerData.DashVFX.Play(true);
         StartCoroutine(Dashing());
         StartCoroutine(DashCoolDown());
     }
@@ -652,30 +658,47 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         }
     }
     private void PlayComboVFX() {
-        ParticleSystem vfx;
+        if (!AttackSuccess) return;
+
+        ParticleSystem vfx = null;
         switch (referenceKeeper.PlayerData.CurrentAttackStyle)
         {
             case EnumHolder.AttackStyle.None:
                 break;
             case EnumHolder.AttackStyle.Melee1:
                 vfx = referenceKeeper.PlayerData.Melee1ComboVFX[(int)referenceKeeper.PlayerData.CurrentCombo];
-                if (vfx) vfx.Stop(true); vfx.Play(true); 
                 break;
             case EnumHolder.AttackStyle.Melee2:
-                vfx = referenceKeeper.PlayerData.Melee2ComboVFX[(int)referenceKeeper.PlayerData.CurrentCombo];
-                if (vfx) vfx.Stop(true); vfx.Play(true);
+                vfx = referenceKeeper.PlayerData.Melee2ComboVFX[(int)referenceKeeper.PlayerData.CurrentCombo];                
                 break;
             case EnumHolder.AttackStyle.Melee3:
-                vfx = referenceKeeper.PlayerData.Melee3ComboVFX[(int)referenceKeeper.PlayerData.CurrentCombo];
-                if (vfx) vfx.Stop(true); vfx.Play(true);
+                vfx = referenceKeeper.PlayerData.Melee3ComboVFX[(int)referenceKeeper.PlayerData.CurrentCombo];                
                 break;
             default:
                 break;
         }              
-    }    
+
+        if (vfx) { CurrentAttackVFX = vfx; vfx.Stop(true); vfx.Play(true); }
+    }
     #endregion
 
     #region Damage Section
+    private void CheckAttackEnemySuccess(Collider target) { 
+        IDamagable damagableTarget = target.GetComponentInParent<IDamagable>();
+        damagableTarget.CheckAttackSuccess(out bool success);
+
+        AttackSuccess = success;
+
+        if (!AttackSuccess)
+        {            
+            HitTrigger.enabled = false;
+            CurrentAttackVFX.Stop(true);
+        }
+    }
+    public void CheckAttackSuccess(out bool success)
+    {
+        success = true;
+    }
     private void DealDamage(Collider target) {
         IDamagable damagableTarget = target.GetComponentInParent<IDamagable>();
 
@@ -702,13 +725,17 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
                 break;
         }
 
-
         damagableTarget.OnReceiveDamage(
             comboDetailList.DamageAmount,
             comboDetailList.PushDistance,
             comboDetailList.PushDuration,
             comboDetailList.PushBackMovement, 
             referenceKeeper.PlayerData.CharacterController.transform);
+        
+        if (!AttackSuccess)
+        {
+            referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.ReflectName);
+        }
     }
     private void PlayHitVFX(Collider target)
     {
@@ -936,8 +963,8 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         LockOnTarget();
     }
     #endregion
-    
-    #region Hit
+
+    #region Hit    
     public void OnReceiveDamage(float damageAmount, float pushBackDistance, float duration, AnimationCurve movement, Transform attacker)
     {
         WhenGetDamage?.Invoke();
@@ -948,7 +975,12 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         SetAnimatorTrigger(referenceKeeper.PlayerData.HitKnockbackName);
     }
     #endregion
-
+    #region Heal
+    public void OnHeal(float damageAmount) {
+        HealthModule.ChangeHealth(this, damageAmount);
+        OnHealthPercentageChanged(HealthPercentage);
+    }
+    #endregion
     #region Coroutine Section   
     private IEnumerator HitVFXTriggerLifeTime() {
         referenceKeeper.PlayerData.HitVFXTrigger.SetActive(true);
@@ -1048,6 +1080,14 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
 
         //Gizmos.DrawSphere(referenceKeeper.PlayerData.CharacterController.transform.position, referenceKeeper.PlayerData.SearchRadius);
     }
+    #region SMB Event
+    public void OnStateExit(int damageTriggerIndex)
+    {
+        TurnOffDamageTrigger(damageTriggerIndex);
 
-    
+        AttackSuccess = true;
+        HitTrigger.enabled = true;
+        //AttackEnded();
+    }
+    #endregion
 }

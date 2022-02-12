@@ -14,6 +14,11 @@ public class AttackAction : Action
         
     }
 
+    public override void OnExitState(StateController controller)
+    {
+        
+    }
+
     private void Attack(StateController controller) {
         //RaycastHit hit;
 
@@ -42,7 +47,7 @@ public class AttackAction : Action
 
             if (!controller.enemyStats.AttackCD) {
                 // Call Attack Function
-                Debug.Log("Attack");
+                //Debug.Log("Attack");
                 controller.StartAttackCD();
             }
 

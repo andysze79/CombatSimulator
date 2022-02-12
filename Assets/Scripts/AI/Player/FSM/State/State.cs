@@ -24,15 +24,24 @@ namespace CombateSimulator.PlayerFSM
         }
         protected virtual void WhenReceiveFight1Up()
         {
-            
+            if (stateMachine.playerLogic.CheckGrounded() && stateMachine.playerData.CurrentAttackStyle != EnumHolder.AttackStyle.None)
+            {
+                stateMachine.EnterState(typeof(Attack));
+            }
         }
         protected virtual void WhenReceiveFight2Down()
         {
-            
+            if (stateMachine.playerLogic.CheckGrounded() && stateMachine.playerData.CurrentAttackStyle != EnumHolder.AttackStyle.None)
+            {
+                stateMachine.EnterState(typeof(Attack));
+            }
         }
         protected virtual void WhenReceiveFight2Up()
         {
-            
+            if (stateMachine.playerLogic.CheckGrounded() && stateMachine.playerData.CurrentAttackStyle != EnumHolder.AttackStyle.None)
+            {
+                stateMachine.EnterState(typeof(Attack));
+            }
         }
         protected void WhenGetDamage() {
             stateMachine.EnterState(typeof(Hit));

@@ -7,8 +7,7 @@ public class LookDecision : Decision
 {
     public enum Type { Parallel, Cone}
     public Type m_CurrentType = Type.Parallel;
-    //[Min(1)]public int precision;
-    //public float angle;
+    public bool m_ShowRay;
     public Color RayColor;
     public override bool Decide(StateController controller)
     {
@@ -26,14 +25,13 @@ public class LookDecision : Decision
                 targetvisible = ParallelLook(controller);
                 break;
         }
-
         return targetvisible;
     }
     private bool ParallelLook(StateController controller) {
         RaycastHit hit;
 
-        Debug.DrawRay(controller.eyes.position - controller.eyes.right * controller.enemyStats.m_LookSphereCastRadius / 2, controller.eyes.forward * controller.enemyStats.m_LookRange, Color.green);
-        Debug.DrawRay(controller.eyes.position + controller.eyes.right * controller.enemyStats.m_LookSphereCastRadius / 2, controller.eyes.forward * controller.enemyStats.m_LookRange, Color.green);
+        if (m_ShowRay) Debug.DrawRay(controller.eyes.position - controller.eyes.right * controller.enemyStats.m_LookSphereCastRadius / 2, controller.eyes.forward * controller.enemyStats.m_LookRange, Color.green);
+        if (m_ShowRay) Debug.DrawRay(controller.eyes.position + controller.eyes.right * controller.enemyStats.m_LookSphereCastRadius / 2, controller.eyes.forward * controller.enemyStats.m_LookRange, Color.green);
 
         if (Physics.SphereCast(
             controller.eyes.position, 
@@ -65,10 +63,9 @@ public class LookDecision : Decision
                 var dir = Quaternion.AngleAxis(i, Vector3.up) * controller.transform.forward;
                 dir = Quaternion.AngleAxis(j, controller.transform.right) * dir;
 
-
                 if (Physics.Raycast(pos, dir, out hit, controller.enemyStats.m_LookRange))
                 {
-                    Debug.DrawLine(pos, hit.point, RayColor);
+                    if (m_ShowRay) Debug.DrawLine(pos, hit.point, RayColor);
 
                     if (hit.collider.CompareTag("Player"))
                     {
@@ -76,8 +73,8 @@ public class LookDecision : Decision
                         return true;
                     }
                 }
-                else { 
-                    Debug.DrawLine(pos, pos + dir * controller.enemyStats.m_LookRange, RayColor);                    
+                else {
+                    if (m_ShowRay) Debug.DrawLine(pos, pos + dir * controller.enemyStats.m_LookRange, RayColor);                    
                 }
             }
         }

@@ -17,6 +17,11 @@ public class DeathAction : Action
         
     }
 
+    public override void OnExitState(StateController controller)
+    {
+        
+    }
+
     private bool DelayToDeath(StateController controller) {
         return controller.CheckIfCountDownElapsed(controller.enemyStats.m_DelayToDeathDuration);
     }

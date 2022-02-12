@@ -7,11 +7,12 @@ using UnityEngine.AI;
 
 public class StateController : MonoBehaviour
 {
+    
     public State currentState;
     public Transform eyes;
     [FoldoutGroup("States Settings")] public State remainState;
-    [FoldoutGroup("States Settings")] public State HitState;
-    
+    [FoldoutGroup("States Settings")] public State HitState;    
+    [FoldoutGroup("States Settings")] public State DefenseHitState;    
     [ReadOnly] [FoldoutGroup("Debug")] public State previousState;
     [ReadOnly] [FoldoutGroup("Debug")] public EnemyData enemyStats;
     [ReadOnly] [FoldoutGroup("Debug")] public EnemyLogic enemyLogic;
@@ -19,10 +20,14 @@ public class StateController : MonoBehaviour
     [ReadOnly] [FoldoutGroup("Debug")] public Transform chaseTarget;
     [HideInInspector] public NavMeshAgent navMeshAgent;
     [HideInInspector] public Animator animator;
-    [HideInInspector] public List<Transform> wayPointList;
+    /*[HideInInspector] */public List<Transform> wayPointList;
     [HideInInspector] public int nextWayPoint;
 
     private bool aiActive;
+    public float LookAroundStep { get; set; }
+    public Vector3 rot { get; set; }
+    public Vector3 LookAroundFrom { get; set; }
+    public Vector3 LookAroundTo { get; set; }
 
     Coroutine AttackCDProgress { get; set; }
 
@@ -35,21 +40,23 @@ public class StateController : MonoBehaviour
     }
     private void OnEnable()
     {
-        CombateSimulator.GameManager.Instance.AddEnemy(this);
+        if(enemyStats.m_PreSpawn)
+            CombateSimulator.GameManager.Instance.EnemySpawnersController.AddEnemy(this, enemyStats.m_WayPoints);
+        
         SetAnimationTrigger(currentState.playThisAnimation.ToString());
 
         enemyLogic.OnReceiveDamage += ReceiveDamage;
     }
     private void OnDisable()
     {
-        CombateSimulator.GameManager.Instance.RemoveEnemy(this);        
+        CombateSimulator.GameManager.Instance.EnemySpawnersController.RemoveEnemy(this);        
 
         enemyLogic.OnReceiveDamage -= ReceiveDamage;
     }
-    public void SetupAI(bool aiActivationFromTankManager, List<Transform> wayPointsFromTankManager)
+    public void SetupAI(bool aiActivation, List<Transform> wayPointsFromTankManager)
     {
         wayPointList = wayPointsFromTankManager;
-        aiActive = aiActivationFromTankManager;
+        aiActive = aiActivation;
         if (aiActive)
         {
             navMeshAgent.enabled = true;
@@ -80,7 +87,7 @@ public class StateController : MonoBehaviour
     {
         if (nextState != remainState)
         {
-            //print(nextState);
+            print(nextState);
             previousState = currentState;
             currentState = nextState;
             previousState.ExitState(this);
@@ -88,7 +95,10 @@ public class StateController : MonoBehaviour
             OnExitState();
 
             if(currentState.playThisAnimation != State.AnimationTriggerName.None)
+            {
+                ResetAnimationTrigger(previousState.playThisAnimation.ToString());
                 SetAnimationTrigger(currentState.playThisAnimation.ToString());
+            }
         }
     }
 
@@ -97,8 +107,8 @@ public class StateController : MonoBehaviour
         stateTimeElapsed += Time.deltaTime;
         return (stateTimeElapsed >= duration);
     }
-    public WayPointInfo GetCurrentWayPointIndo() {
-        wayPointList[nextWayPoint].TryGetComponent<WayPointInfo>(out WayPointInfo info);
+    public WayPointInfo GetCurrentWayPointInfo() {
+        wayPointList[nextWayPoint].TryGetComponent<WayPointInfo>(out WayPointInfo info);        
         return info;
     }
     private void OnExitState()
@@ -106,19 +116,31 @@ public class StateController : MonoBehaviour
         stateTimeElapsed = 0;
     }
     public bool CheckCurrentAnimationEnded(string animationName) {
-        bool isTargetAnimation = animator.GetCurrentAnimatorStateInfo(0).IsName(animationName);
-        bool isTargetAnimationFinished = animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= .95f;
-        //print(isTargetAnimation + " is target animation");
-        return !isTargetAnimation || isTargetAnimationFinished;
+        int layer = (animator.GetLayerWeight(enemyStats.m_DefenseAnimatorLayerIndex) > 0.5f) ? enemyStats.m_DefenseAnimatorLayerIndex : 0 ;
+        bool isTargetAnimation = animator.GetCurrentAnimatorStateInfo(layer).IsName(animationName);
+        bool isTargetAnimationFinished = animator.GetCurrentAnimatorStateInfo(layer).normalizedTime >= .95f;
+        return isTargetAnimation && isTargetAnimationFinished;
     }
-    private void SetAnimationTrigger(string name) {
+    public void SetAnimationTrigger(string name) {
         animator.SetTrigger(name);
+    }
+    private void ResetAnimationTrigger(string name)
+    {
+        animator.ResetTrigger(name);
     }
     private void ReceiveDamage(Transform target) {
         if (HitState == null) { Debug.Log(transform.name + " need Hit State"); return; }
         if (chaseTarget == null) { Debug.Log(target.name); chaseTarget = target; }
-        
-        TransitionToState(HitState);
+
+        if (!enemyStats.isDefensing)
+        { 
+            TransitionToState(HitState); 
+        }
+        if (enemyStats.isDefensing)
+        {
+            if (DefenseHitState == null) { Debug.Log(transform.name + " need DefenseHit State"); return; }
+            TransitionToState(DefenseHitState);
+        }
     }
     public void StartAttackCD() {
         if (AttackCDProgress != null)

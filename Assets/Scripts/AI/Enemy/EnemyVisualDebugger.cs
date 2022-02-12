@@ -38,15 +38,10 @@ public class EnemyVisualDebugger : MonoBehaviour
                     var dir = Quaternion.AngleAxis(i, Vector3.up) * EnemyStateController.transform.forward;
                     dir = Quaternion.AngleAxis(j, EnemyStateController.transform.right) * dir;
 
-
                     if (Physics.Raycast(pos, dir, out hit, EnemyData.m_LookRange))
-                    {
                         Debug.DrawLine(pos, hit.point, m_LookConeColor);
-                    }
                     else
-                    {
                         Debug.DrawLine(pos, pos + dir * EnemyData.m_LookRange, m_LookConeColor);
-                    }
                 }
             }
         }

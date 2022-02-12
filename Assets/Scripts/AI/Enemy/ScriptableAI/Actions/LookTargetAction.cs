@@ -15,6 +15,11 @@ public class LookTargetAction : Action
         
     }
 
+    public override void OnExitState(StateController controller)
+    {
+        
+    }
+
     private void LookAtTarget(StateController controller) {
         if (controller.chaseTarget == null) return;
 

@@ -12,3 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f300733acc189494799eb489467cbd66, type: 3}
   m_Name: AttackAnimationEndedDecision
   m_EditorClassIdentifier: 
+  AnimationName: Attack1
+  AnimationDuration: 3

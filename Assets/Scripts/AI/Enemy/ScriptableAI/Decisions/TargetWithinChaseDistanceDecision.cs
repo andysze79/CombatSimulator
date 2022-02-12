@@ -9,6 +9,8 @@ public class TargetWithinChaseDistanceDecision : Decision
         return CheckTargetDistance(controller);
     }
     private bool CheckTargetDistance(StateController controller) {
+        if (controller.chaseTarget == null) return false;
+
         var decisionResult = (Vector3.Distance(controller.chaseTarget.position, controller.transform.position) < controller.enemyStats.m_ChaseDistance);
         if (!decisionResult) controller.chaseTarget = null;
         return decisionResult;

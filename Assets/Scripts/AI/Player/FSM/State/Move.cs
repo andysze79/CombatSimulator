@@ -15,6 +15,10 @@ namespace CombateSimulator.PlayerFSM
 
             UserControllerGetter.Instance.Joystick1InputDelegate += WhenReceiveJoystick1Input;
             UserControllerGetter.Instance.JumpDownDelegate += WhenReceiveJump;
+
+            UserControllerGetter.Instance.Fight1UpDelegate += WhenReceiveFight1Up;
+            UserControllerGetter.Instance.Fight2DownDelegate += WhenReceiveFight2Down;
+            UserControllerGetter.Instance.Fight2UpDelegate += WhenReceiveFight2Up;
         }
         protected override void OnDisable()
         {
@@ -25,6 +29,10 @@ namespace CombateSimulator.PlayerFSM
 
             UserControllerGetter.Instance.Joystick1InputDelegate -= WhenReceiveJoystick1Input;
             UserControllerGetter.Instance.JumpDownDelegate -= WhenReceiveJump;
+
+            UserControllerGetter.Instance.Fight1UpDelegate -= WhenReceiveFight1Up;
+            UserControllerGetter.Instance.Fight2DownDelegate -= WhenReceiveFight2Down;
+            UserControllerGetter.Instance.Fight2UpDelegate -= WhenReceiveFight2Up;
         }
         protected override void Update()
         {

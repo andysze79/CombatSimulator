@@ -211,7 +211,7 @@ MonoBehaviour:
   m_Health: {fileID: 6939629451357354952}
   m_Buffer: {fileID: 3213417066764862208}
   m_YOffset: 1.83
-  m_BufferSpeed: 1.1
+  m_BufferSpeed: 2
   m_Movement:
     serializedVersion: 2
     m_Curve:

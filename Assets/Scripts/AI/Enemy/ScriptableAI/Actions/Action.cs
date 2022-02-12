@@ -6,4 +6,5 @@ public abstract class Action : ScriptableObject
 {
     public abstract void Initialize (StateController controller);
     public abstract void Act (StateController controller);
+    public abstract void OnExitState (StateController controller);
 }

@@ -13,4 +13,9 @@ public class IdleAction : Action
     {
         
     }
+
+    public override void OnExitState(StateController controller)
+    {
+        
+    }
 }

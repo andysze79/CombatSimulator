@@ -14,4 +14,9 @@ public class StopAction : Action
     {
        
     }
+
+    public override void OnExitState(StateController controller)
+    {
+        
+    }
 }

@@ -14,6 +14,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Weapon: Katana
   m_Melee1ComboDetailsList:
+  - DamageAmount: 2
+    PushDistance: 1
+    PushDuration: 0.3
+    PushBackMovement:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 2
+        outSlope: 2
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
   - DamageAmount: 5
     PushDistance: 1
     PushDuration: 0.3
@@ -41,7 +68,7 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-  - DamageAmount: 10
+  - DamageAmount: 8
     PushDistance: 1
     PushDuration: 0.3
     PushBackMovement:
@@ -68,7 +95,7 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-  - DamageAmount: 15
+  - DamageAmount: 12
     PushDistance: 1
     PushDuration: 0.3
     PushBackMovement:
@@ -96,33 +123,6 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - DamageAmount: 20
-    PushDistance: 1
-    PushDuration: 0.3
-    PushBackMovement:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0
-        inSlope: 2
-        outSlope: 2
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-  - DamageAmount: 50
     PushDistance: 3
     PushDuration: 0.7
     PushBackMovement:
@@ -150,7 +150,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   m_Melee2ComboDetailsList:
-  - DamageAmount: 10
+  - DamageAmount: 5
     PushDistance: 1.5
     PushDuration: 0.3
     PushBackMovement:
@@ -177,7 +177,7 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-  - DamageAmount: 10
+  - DamageAmount: 8
     PushDistance: 1.5
     PushDuration: 0.3
     PushBackMovement:
@@ -204,7 +204,7 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-  - DamageAmount: 15
+  - DamageAmount: 12
     PushDistance: 1.5
     PushDuration: 0.3
     PushBackMovement:
@@ -231,7 +231,7 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-  - DamageAmount: 60
+  - DamageAmount: 30
     PushDistance: 1
     PushDuration: 0.3
     PushBackMovement:
@@ -259,7 +259,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   m_Melee3ComboDetailsList:
-  - DamageAmount: 100
+  - DamageAmount: 50
     PushDistance: 3
     PushDuration: 0.3
     PushBackMovement:

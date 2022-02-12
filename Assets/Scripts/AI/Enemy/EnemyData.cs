@@ -10,17 +10,16 @@ namespace CombateSimulator.EnemyAI
     {
         public enum EnemyType { Chaser, Scanner, Guard }
         public EnemyType m_EnemyType = EnemyType.Chaser;
-        [ShowIf("m_EnemyType", EnemyType.Scanner)]
-        [BoxGroup("Scanner Type Settings")]
-        public float m_SearchingTurnSpeed = 5;
-        [ShowIf("m_EnemyType", EnemyType.Scanner)]
-        [BoxGroup("Scanner Type Settings")]
-        public float m_SearchingDuration = 5;
-        [BoxGroup("Patrol Settings")]
-        public int m_WaypointsIndex = 0;
+        [BoxGroup("PreSpawn Settings")]
+        public bool m_PreSpawn;
+        [ShowIf("m_PreSpawn")] public List<Transform> m_WayPoints = new List<Transform>();
         [ShowIf("m_EnemyType", EnemyType.Guard)]
         [BoxGroup("Look Around Settings")]
         public float m_LookAroundSpeed = 0;
+        [BoxGroup("Search Settings")]
+        public float m_SearchingTurnSpeed = 5;
+        [BoxGroup("Search Settings")]
+        public float m_SearchingDuration = 5;
         [BoxGroup("Search Settings")]
         public float m_LookSphereCastRadius = 5;
         [BoxGroup("Search Settings")]
@@ -61,6 +60,12 @@ namespace CombateSimulator.EnemyAI
         public float m_HitStunDuration = 3;
         [BoxGroup("Death Settings")]
         public float m_DelayToDeathDuration = 3;
+        [BoxGroup("Defense Settings")]
+        public float m_DefenseAmount;
+        [BoxGroup("Defense Settings")]
+        public int m_DefenseAnimatorLayerIndex;
+        [BoxGroup("Defense Settings")]
+        public float m_DefenseSwitchLayerDuration;        
         [BoxGroup("Status Settings")]
         public float m_MaxHealth = 100;
         [FoldoutGroup("AnimationTrigger")]
@@ -74,6 +79,8 @@ namespace CombateSimulator.EnemyAI
 
         [ReadOnly] public bool AttackCD;// { get; set; }
         [ReadOnly] public bool Stun;// { get; set; }
+        [ReadOnly] public bool Invulnerable;
+        [ReadOnly] public bool isDefensing;
 
     }
 }

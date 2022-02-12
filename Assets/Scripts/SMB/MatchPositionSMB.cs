@@ -8,7 +8,7 @@ public class MatchPositionSMB : StateMachineBehaviour
     [SerializeField] AvatarTarget targetBodyPart = AvatarTarget.Root;
     [SerializeField][MinMaxSlider("Min",1, true)] Vector2 effectiveRange;
 
-    [Header("Assist Settings")]
+    [Header("Assist Settings")]    
     [SerializeField, Range(0, 1)] float assistPower = 1;
     [SerializeField, Range(0, 10)] float assistDistance = 1;
 
@@ -17,6 +17,7 @@ public class MatchPositionSMB : StateMachineBehaviour
     MatchTargetWeightMask weightMask;
     bool isSkip = false;
     bool isInitialized = false;
+    float dist;
 
     public override void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
@@ -29,7 +30,8 @@ public class MatchPositionSMB : StateMachineBehaviour
             isInitialized = true;
         }
 
-        isSkip = Vector3.Distance(target.TargetPosition, animator.rootPosition) > assistDistance;
+        dist = Vector3.Distance(target.TargetPosition, animator.rootPosition);
+        isSkip =  dist > assistDistance || dist < 2;
     }
 
     public override void OnStateIK(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
@@ -42,7 +44,7 @@ public class MatchPositionSMB : StateMachineBehaviour
             animator.InterruptMatchTarget(false);
         }
         else 
-        {
+        {            
             animator.MatchTarget(
                 target.TargetPosition,
                 animator.bodyRotation,

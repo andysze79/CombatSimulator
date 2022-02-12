@@ -6,27 +6,31 @@ using UltEvents;
 
 namespace CombateSimulator.EnemyAI
 {
-    public class EnemyLogic : MonoBehaviour, IDamagable, IHealthBehavior
+    public class EnemyLogic : MonoBehaviour, IDamagable, IHealthBehavior, IAnimationEvent
     {
         public static event Action<IHealthBehavior> OnHealthAdded = delegate { };
         public static event Action<IHealthBehavior> OnHealthRemoved = delegate { };
         public event Action<float> OnHealthPercentageChanged;
 
+        public UltEvent WhenReceiveDamageWhileBlocking;
         public UltEvent WhenReceiveDamage;
+        [SerializeField] private UltEvent WhenStartDefend;
+        [SerializeField] private UltEvent WhenEndDefend;
         public delegate void EnemyDelegate(Transform target);
         public EnemyDelegate OnReceiveDamage;
         public EnemyReferenceKeeper referenceKeeper;
         int currentAttackIndex;
         Coroutine PositionLerpingProcess { get; set; }
 
+        public Rigidbody rigidbody { get; set; }
         public float MaxHealth { get { return referenceKeeper.EnemyData.m_MaxHealth; } }
-
         public float CurrentHealth { get; set; }
         public float HealthPercentage { get; set; }
         public Transform HealthObject { get; set; }
 
         private void Awake()
         {
+            rigidbody = GetComponentInChildren<Rigidbody>();
             referenceKeeper = GetComponent<EnemyReferenceKeeper>();
         }
         private void Start()
@@ -37,6 +41,12 @@ namespace CombateSimulator.EnemyAI
 
             AssignAnimationEvent();
             AssignTriggerEvent(true);
+            
+            referenceKeeper.AnimationPlayer.AnimatorRef.keepAnimatorControllerStateOnDisable = true;
+            foreach (var smb in referenceKeeper.AnimationPlayer.AnimatorRef.GetBehaviours<AnimationEventSMB>())
+            {
+                smb.target = this;
+            }
         }
         private void OnDisable()
         {
@@ -107,11 +117,44 @@ namespace CombateSimulator.EnemyAI
             referenceKeeper.EnemyData.Stun = !value;
         }
         #endregion
-        
+        public void StartDefense() {
+            referenceKeeper.EnemyData.isDefensing = true;
+            referenceKeeper.AnimationPlayer.ChangeLayer(referenceKeeper.EnemyData.m_DefenseAnimatorLayerIndex, 1, referenceKeeper.EnemyData.m_DefenseSwitchLayerDuration);
+            WhenStartDefend?.Invoke();
+        }
+        public void EndDefense()
+        {            
+            referenceKeeper.EnemyData.isDefensing = false;
+            referenceKeeper.AnimationPlayer.ChangeLayer(referenceKeeper.EnemyData.m_DefenseAnimatorLayerIndex, 0, referenceKeeper.EnemyData.m_DefenseSwitchLayerDuration);
+            WhenEndDefend?.Invoke();
+        }
+        public void CheckAttackSuccess(out bool success)
+        {            
+            success = referenceKeeper.EnemyData.isDefensing ? false : true;                
+        }
         void IDamagable.OnReceiveDamage(float damageAmount, float pushBackDistance, float duration, AnimationCurve movement, Transform attacker)
         {
-            WhenReceiveDamage?.Invoke();
+            if (referenceKeeper.EnemyData.Invulnerable) return; 
+            if (!referenceKeeper.EnemyData.isDefensing) WhenReceiveDamage?.Invoke();
+            if (referenceKeeper.EnemyData.isDefensing) WhenReceiveDamageWhileBlocking?.Invoke();
+
             OnReceiveDamage?.Invoke(attacker);
+
+            DamageCalculation(damageAmount);
+
+            if (referenceKeeper.EnemyData.isDefensing)
+                pushBackDistance = pushBackDistance / CombateSimulator.GameManager.Instance.m_GlobalVariables.DefensePushBackDevideCoe;
+                        
+            StartCoroutine(CombatCoroutines.PositionLerping(attacker, transform, pushBackDistance, duration, movement));
+        }
+        private void DamageCalculation(float damageAmount) {
+            
+            if (referenceKeeper.EnemyData.isDefensing)
+            { 
+                damageAmount = damageAmount / (CombateSimulator.GameManager.Instance.m_GlobalVariables.DefenseMulCoe * referenceKeeper.EnemyData.m_DefenseAmount);
+                damageAmount = Mathf.Clamp(damageAmount, 0, float.PositiveInfinity);
+                //print(damageAmount);
+            }
 
             //print("Receive damage: " + damageAmount);
             HealthModule.SwitchHealthBar(this, true);
@@ -119,9 +162,13 @@ namespace CombateSimulator.EnemyAI
             OnHealthPercentageChanged(HealthPercentage);
             if (CurrentHealth <= 0) HealthModule.SwitchHealthBar(this, false);
             //print("Current Health: " + CurrentHealth);
+        }
 
-            StartCoroutine(CombatCoroutines.PositionLerping(attacker, transform, pushBackDistance, duration, movement));
-        }      
-
+        #region SMB Events
+        public void OnStateExit(int damageTriggerIndex)
+        {
+            TurnOffDamageTrigger(damageTriggerIndex);
+        }
+        #endregion
     }
 }

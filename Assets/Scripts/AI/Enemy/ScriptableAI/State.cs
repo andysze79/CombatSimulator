@@ -18,7 +18,12 @@ public class State : ScriptableObject
             actions[i].Initialize(controller);
         }
     }
-    public void ExitState(StateController controller) { }
+    public void ExitState(StateController controller) {
+        for (int i = 0; i < actions.Length; i++)
+        {
+            actions[i].OnExitState(controller);
+        }
+    }
     public void UpdateState(StateController controller) {
         DoActions(controller);
         CheckTransitions(controller);

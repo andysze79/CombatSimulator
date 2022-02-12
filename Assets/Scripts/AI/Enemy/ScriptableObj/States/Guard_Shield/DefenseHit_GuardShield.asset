@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 856d4dc457be511419884d134d9af603, type: 3}
+  m_Name: DefenseHit_GuardShield
+  m_EditorClassIdentifier: 
+  actions:
+  - {fileID: 11400000, guid: 21c4c7f0a585df74dbf11bdda7a84322, type: 2}
+  - {fileID: 11400000, guid: 0a8ce7d2860110e479e3c0347dfd2f19, type: 2}
+  - {fileID: 11400000, guid: fc7e726b6cda2ed4292313858b27530a, type: 2}
+  transitions:
+  - decision:
+    - {fileID: 11400000, guid: 4358c6306419253428ed9966170eeeba, type: 2}
+    - {fileID: 11400000, guid: 3be6ac8baa0278f40a1a8a634949d5d6, type: 2}
+    - {fileID: 11400000, guid: c95882aba4df47b4ba576f11ad955493, type: 2}
+    logic: 0
+    trueState: {fileID: 11400000, guid: 790df1433c1912049b31c4999813128b, type: 2}
+    falseState: {fileID: 11400000, guid: 7d9b9067f860d7145897669c027034f2, type: 2}
+  - decision:
+    - {fileID: 11400000, guid: aaec4c46a96894946bb175213a2956cc, type: 2}
+    logic: 1
+    trueState: {fileID: 11400000, guid: 10cd82d32c6e72c46915b5d8b35554a3, type: 2}
+    falseState: {fileID: 11400000, guid: bc4ab764f1eeb334fb0d008b3d7e5e74, type: 2}
+  playThisAnimation: 3
+  sceneGizmoColor: {r: 0, g: 0.17060614, b: 1, a: 1}

@@ -5,13 +5,9 @@ using UnityEngine;
 public class LookAroundAction : Action
 {
     public AnimationCurve Movement;
-    private Vector3 from;
-    private Vector3 to;
-    private Vector3 rot;
-    private float step;
     public override void Initialize(StateController controller)
     {
-        step = 0;
+        controller.LookAroundStep = 0;
         SetDatas(controller);
     }
     public override void Act(StateController controller)
@@ -19,21 +15,24 @@ public class LookAroundAction : Action
         Rotate(controller);        
     }
     private void SetDatas(StateController controller) {
-        var range = controller.GetCurrentWayPointIndo().LookAroundRange;
+        var range = controller.GetCurrentWayPointInfo().LookAroundRange;
 
-        rot = controller.transform.eulerAngles;
-        from = new Vector3(rot.x, range[0], rot.z);
-        to = new Vector3(rot.x, range[1], rot.z);
+        controller.rot = controller.transform.eulerAngles;
+        controller.LookAroundFrom = new Vector3(controller.rot.x, range[0], controller.rot.z);
+        controller.LookAroundTo = new Vector3(controller.rot.x, range[1], controller.rot.z);
     }
     private void Rotate(StateController controller) {
 
-        step += Time.deltaTime * controller.enemyStats.m_LookAroundSpeed;        
+        controller.LookAroundStep += Time.deltaTime * controller.enemyStats.m_LookAroundSpeed;        
 
-        if(step < 1) 
-            controller.transform.eulerAngles = Vector3.Lerp(rot, to, Movement.Evaluate(step));        
+        if(controller.LookAroundStep < 1) 
+            controller.transform.eulerAngles = Vector3.Lerp(controller.rot, controller.LookAroundTo, Movement.Evaluate(controller.LookAroundStep));        
         else
-            controller.transform.eulerAngles = Vector3.Lerp(from, to, Movement.Evaluate(step));        
+            controller.transform.eulerAngles = Vector3.Lerp(controller.LookAroundFrom, controller.LookAroundTo, Movement.Evaluate(controller.LookAroundStep));        
     }
 
-    
+    public override void OnExitState(StateController controller)
+    {
+        
+    }
 }

@@ -10,6 +10,8 @@ public class InAttackRangeDecision : Decision
     }
     private bool CheckInAttackRange(StateController controller)
     {
+        if (controller.chaseTarget == null) return false;
+
         var decisionResult = (Vector3.Distance(controller.chaseTarget.position, controller.transform.position) < controller.enemyStats.m_AttackRange);
         return decisionResult;
     }

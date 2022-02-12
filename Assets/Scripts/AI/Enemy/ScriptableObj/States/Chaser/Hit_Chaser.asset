@@ -20,5 +20,10 @@ MonoBehaviour:
     logic: 1
     trueState: {fileID: 11400000, guid: a5e31d9310ad86a4aad52f4b98473d7d, type: 2}
     falseState: {fileID: 11400000, guid: bc4ab764f1eeb334fb0d008b3d7e5e74, type: 2}
+  - decision:
+    - {fileID: 11400000, guid: aaec4c46a96894946bb175213a2956cc, type: 2}
+    logic: 0
+    trueState: {fileID: 11400000, guid: 93c5ad03faa0de4478fc11267c5166f6, type: 2}
+    falseState: {fileID: 11400000, guid: bc4ab764f1eeb334fb0d008b3d7e5e74, type: 2}
   playThisAnimation: 3
   sceneGizmoColor: {r: 0.5188679, g: 0.015358231, b: 0, a: 1}

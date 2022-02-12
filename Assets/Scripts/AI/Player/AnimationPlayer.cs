@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public class AnimationPlayer : MonoBehaviour
 {
@@ -13,6 +14,7 @@ public class AnimationPlayer : MonoBehaviour
     public AnimationPlayerEvent WhenAttackEnded;
     public AnimationEventCombo WhenTurnOnDamageTrigger;
     public AnimationEventCombo WhenTurnOffDamageTrigger;
+    private int CurrentLayerIndex { get; set; }
     public Animator AnimatorRef { get; set; }
     //public ReferenceKeeper ReferenceKeeper { get; set; }
     protected virtual void Awake()
@@ -33,7 +35,7 @@ public class AnimationPlayer : MonoBehaviour
         AnimatorRef.ResetTrigger(name);
     }
     public void StartCheckAnimationEvent() {
-        //WhenStartCheckAnimationEvent?.Invoke();
+        WhenStartCheckAnimationEvent?.Invoke();
     }
     public void TurnOnDamageTrigger(int comboName) 
     {
@@ -56,6 +58,15 @@ public class AnimationPlayer : MonoBehaviour
     }
     public void StepForward(float direction) {
         StartCoroutine(ChangePosition(direction));
+    }
+    public void ChangeLayer(int layerIndex, float layerWeight, float duration) {
+        if (CurrentLayerIndex == layerIndex && AnimatorRef.GetLayerWeight(layerIndex) == layerWeight) return;
+        CurrentLayerIndex = layerIndex;
+        DOTween.To(ChangingLayer, AnimatorRef.GetLayerWeight(layerIndex), layerWeight, duration);
+    }
+    private void ChangingLayer(float layerWeight)
+    {
+        AnimatorRef.SetLayerWeight(CurrentLayerIndex, layerWeight);
     }
     private IEnumerator ChangePosition(float direction) {
         AnimatorRef.SetFloat("Runspeed", direction);

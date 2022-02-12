@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 856d4dc457be511419884d134d9af603, type: 3}
+  m_Name: Guard_GuardShield
+  m_EditorClassIdentifier: 
+  actions:
+  - {fileID: 11400000, guid: 25e17acd6601f3741845001ef5670b57, type: 2}
+  - {fileID: 11400000, guid: 0a8ce7d2860110e479e3c0347dfd2f19, type: 2}
+  transitions:
+  - decision:
+    - {fileID: 11400000, guid: e19a0625f2832274b9cdb6298c9749c3, type: 2}
+    logic: 0
+    trueState: {fileID: 11400000, guid: 9c101f0f9fc2f5b4eb58cd07e2d8b4e5, type: 2}
+    falseState: {fileID: 11400000, guid: bc4ab764f1eeb334fb0d008b3d7e5e74, type: 2}
+  playThisAnimation: 0
+  sceneGizmoColor: {r: 0.99997807, g: 0, b: 1, a: 1}
