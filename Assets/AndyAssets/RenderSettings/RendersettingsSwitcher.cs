@@ -46,7 +46,16 @@ public class RendersettingsSwitcher : MonoBehaviour
     public int m_Index;
     public float m_TraisitionTime;
     public int Index { get; set; }
-    public RenderSettingsEnum m_Target; 
+    public RenderSettingsEnum m_Target;
+    public static RendersettingsSwitcher m_Instance;
+    public static RendersettingsSwitcher Instance{
+        get {
+            if (m_Instance == null)
+                m_Instance = GameObject.FindObjectOfType<RendersettingsSwitcher>();
+
+            return m_Instance;
+        }
+    }
     public RenderSettingsEnum Target { get; set; }
     
     Coroutine Process { get; set; }
@@ -67,8 +76,7 @@ public class RendersettingsSwitcher : MonoBehaviour
 
             ChangeRenderSettings(Target);
         }
-    }
-
+    }    
     public void ChangeRenderSettings(string name) {
         foreach (var item in m_RenderSettingsValuesGroup)
         {

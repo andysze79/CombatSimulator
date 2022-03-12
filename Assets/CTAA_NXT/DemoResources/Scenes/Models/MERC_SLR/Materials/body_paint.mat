@@ -13,7 +13,7 @@ Material:
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 2050
+  m_CustomRenderQueue: 2000
   stringTagMap:
     RenderType: Opaque
   disabledShaderPasses: []
@@ -132,6 +132,18 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Floats:
     - _AlphaClip: 0
     - _BendNormalsFreq: 4
@@ -139,6 +151,8 @@ Material:
     - _Blend: 0
     - _BumpScale: 1
     - _BumpScale2: 1
+    - _ClearCoatMask: 0
+    - _ClearCoatSmoothness: 0
     - _Cull: 2
     - _CurvatureCustomU: 0
     - _CurvatureCustomV: 0
@@ -150,6 +164,7 @@ Material:
     - _Depth: 0.1
     - _DepthReductionDistance: 20
     - _DepthWrite: 0
+    - _DetailAlbedoMapScale: 1
     - _DetailEmissiveness: 0
     - _DetailGloss: 1
     - _DetailMetalness: 1
@@ -336,6 +351,7 @@ Material:
     - bumpMap2TexelSize: {r: 1, g: 1, b: 1, a: 1}
     - bumpMapTexelSize: {r: 1, g: 1, b: 1, a: 1}
     - heightMapTexelSize: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
 --- !u!114 &2593066417084777661
 MonoBehaviour:
   m_ObjectHideFlags: 11
@@ -348,4 +364,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  version: 1
+  version: 4

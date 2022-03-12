@@ -6,7 +6,7 @@ using UltEvents;
 
 namespace CombateSimulator.EnemyAI
 {
-    public class EnemyLogic : MonoBehaviour, IDamagable, IHealthBehavior, IAnimationEvent
+    public class EnemyLogic : MonoBehaviour, IDamagable, IHealthBehavior, IAnimationEvent, IMatchTarget
     {
         public static event Action<IHealthBehavior> OnHealthAdded = delegate { };
         public static event Action<IHealthBehavior> OnHealthRemoved = delegate { };
@@ -21,16 +21,27 @@ namespace CombateSimulator.EnemyAI
         public EnemyReferenceKeeper referenceKeeper;
         int currentAttackIndex;
         Coroutine PositionLerpingProcess { get; set; }
-
-        public Rigidbody rigidbody { get; set; }
         public float MaxHealth { get { return referenceKeeper.EnemyData.m_MaxHealth; } }
         public float CurrentHealth { get; set; }
         public float HealthPercentage { get; set; }
         public Transform HealthObject { get; set; }
+        public Vector3 AttackPosition { get; set; }
+        public Vector3 TargetPosition
+        {
+            get
+            {
+                if (referenceKeeper.EnemyStateController.chaseTarget.TryGetComponent<Collider>(out Collider col))
+                {
+                    print(col.name);
+                    return col.ClosestPoint(transform.position); 
+                }
+                else
+                    return Vector3.positiveInfinity;
+            }
+        }
 
         private void Awake()
         {
-            rigidbody = GetComponentInChildren<Rigidbody>();
             referenceKeeper = GetComponent<EnemyReferenceKeeper>();
         }
         private void Start()
@@ -42,7 +53,11 @@ namespace CombateSimulator.EnemyAI
             AssignAnimationEvent();
             AssignTriggerEvent(true);
             
-            referenceKeeper.AnimationPlayer.AnimatorRef.keepAnimatorControllerStateOnDisable = true;
+            referenceKeeper.AnimationPlayer.AnimatorRef.keepAnimatorControllerStateOnDisable = true; 
+            foreach (var smb in referenceKeeper.AnimationPlayer.AnimatorRef.GetBehaviours<MatchPositionSMB>())
+            {
+                smb.target = this;
+            }
             foreach (var smb in referenceKeeper.AnimationPlayer.AnimatorRef.GetBehaviours<AnimationEventSMB>())
             {
                 smb.target = this;
@@ -59,15 +74,35 @@ namespace CombateSimulator.EnemyAI
         private void AssignAnimationEvent (){
             referenceKeeper.AnimationPlayer.WhenTurnOnDamageTrigger += TurnOnDamageTrigger;
             referenceKeeper.AnimationPlayer.WhenTurnOffDamageTrigger += TurnOffDamageTrigger;
+            referenceKeeper.AnimationPlayer.WhenCheckAttackPosition += CheckAttackPosition;
         }
         private void ReleaseAnimationEvent (){
             referenceKeeper.AnimationPlayer.WhenTurnOnDamageTrigger -= TurnOnDamageTrigger;
             referenceKeeper.AnimationPlayer.WhenTurnOffDamageTrigger -= TurnOffDamageTrigger;
+            referenceKeeper.AnimationPlayer.WhenCheckAttackPosition -= CheckAttackPosition;
+        }
+        public void CheckAttackPosition() {
+            AttackPosition = referenceKeeper.EnemyStateController.chaseTarget.GetComponentInChildren<Collider>().ClosestPoint(transform.position);
         }
         private void TurnOnDamageTrigger(int Index)
         {
             currentAttackIndex = Index;
             referenceKeeper.EnemyData.m_AttackSettings[Index].AttackTrigger.gameObject.SetActive(true);
+            
+            if(referenceKeeper.EnemyData.m_CheckAttackPositionFromAnimationEvent) 
+                StartCoroutine(CombatCoroutines.AttackerCombatAssistance(
+                transform,
+                AttackPosition, 
+                referenceKeeper.EnemyData.m_AttackAssistRange, 
+                referenceKeeper.EnemyData.m_AssistDuration, 
+                referenceKeeper.EnemyData.m_AssistMovement));
+            else
+                StartCoroutine(CombatCoroutines.AttackerCombatAssistance(
+                transform,
+                referenceKeeper.EnemyStateController.chaseTarget.GetComponentInChildren<Collider>(),
+                referenceKeeper.EnemyData.m_AttackAssistRange,
+                referenceKeeper.EnemyData.m_AssistDuration,
+                referenceKeeper.EnemyData.m_AssistMovement));
         }
         private void TurnOffDamageTrigger(int Index)
         {
@@ -102,7 +137,7 @@ namespace CombateSimulator.EnemyAI
         private void DealDamage(Collider target) {
             IDamagable damagableTarget = target.GetComponentInParent<IDamagable>();
 
-            if (damagableTarget == null) return; 
+            if (damagableTarget == null) return;
             
             damagableTarget.OnReceiveDamage(
              referenceKeeper.EnemyData.m_AttackSettings[currentAttackIndex].DamageAmount,
@@ -146,6 +181,7 @@ namespace CombateSimulator.EnemyAI
                 pushBackDistance = pushBackDistance / CombateSimulator.GameManager.Instance.m_GlobalVariables.DefensePushBackDevideCoe;
                         
             StartCoroutine(CombatCoroutines.PositionLerping(attacker, transform, pushBackDistance, duration, movement));
+            //StartCoroutine(CombatCoroutines.ApplyForce(attacker, transform.GetComponent<Rigidbody>(), transform.GetComponent<UnityEngine.AI.NavMeshAgent>(), pushBackDistance, duration));
         }
         private void DamageCalculation(float damageAmount) {
             

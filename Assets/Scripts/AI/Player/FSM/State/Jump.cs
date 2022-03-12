@@ -13,6 +13,9 @@ namespace CombateSimulator.PlayerFSM
             stateMachine.playerLogic.ActivateMove();
             stateMachine.playerLogic.ActivateLockOnTarget();
 
+            stateMachine.playerData.CharacterController.slopeLimit = 90;
+            stateMachine.playerData.CharacterController.stepOffset = 0;
+
             UserControllerGetter.Instance.Joystick1InputDelegate += WhenReceiveJoystick1Input;
         }
         protected override void OnDisable()
@@ -21,6 +24,9 @@ namespace CombateSimulator.PlayerFSM
             stateMachine.playerLogic.DeactivateMelee();
             stateMachine.playerLogic.DeactivateMove();
             stateMachine.playerLogic.DeactivateLockOnTarget();
+
+            stateMachine.playerData.CharacterController.slopeLimit = stateMachine.playerLogic.CharactorControllerSlopeLimitDefault;
+            stateMachine.playerData.CharacterController.stepOffset = stateMachine.playerLogic.CharactorControllerStepOffsetDefault;
 
             UserControllerGetter.Instance.Joystick1InputDelegate -= WhenReceiveJoystick1Input;
         }

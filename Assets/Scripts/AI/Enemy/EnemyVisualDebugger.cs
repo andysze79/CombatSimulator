@@ -7,6 +7,8 @@ public class EnemyVisualDebugger : MonoBehaviour
     public bool m_AttackObjCheckSphere;
     public bool m_EnableLookCone;
     public Color m_LookConeColor;
+    public bool m_EnableAttackAsistanceRange;
+    public Color m_AttackAsistanceColor;
     public StateController EnemyStateController { get; private set; }
     public CombateSimulator.EnemyAI.EnemyData EnemyData { get; private set; }
     
@@ -44,6 +46,10 @@ public class EnemyVisualDebugger : MonoBehaviour
                         Debug.DrawLine(pos, pos + dir * EnemyData.m_LookRange, m_LookConeColor);
                 }
             }
+        }
+        if (m_EnableAttackAsistanceRange) {
+            Gizmos.color = m_AttackAsistanceColor;
+            Gizmos.DrawWireSphere(EnemyStateController.eyes.position, EnemyData.m_AttackAssistRange);            
         }
     }
 }

@@ -26,8 +26,9 @@ Material:
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
+  m_CustomRenderQueue: 2000
+  stringTagMap:
+    RenderType: Opaque
   disabledShaderPasses: []
   m_SavedProperties:
     serializedVersion: 3
@@ -107,13 +108,13 @@ Material:
     - _EnableParallax: 0
     - _EnableParallaxShadows: 0
     - _EnvironmentReflections: 1
-    - _FoldAdvanced: 0
+    - _FoldAdvanced: 1
     - _FoldAdvancedSurfaceInputs: 1
     - _FoldRimLightingInputs: 1
-    - _FoldStencilOptions: 0
+    - _FoldStencilOptions: 1
     - _FoldSurfaceDetailInputs: 1
     - _FoldSurfaceInputs: 1
-    - _FoldSurfaceOptions: 0
+    - _FoldSurfaceOptions: 1
     - _GItoAO: 10
     - _GItoAOBias: 0
     - _GeometricSpecularAA: 0

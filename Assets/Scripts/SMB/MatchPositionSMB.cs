@@ -31,7 +31,7 @@ public class MatchPositionSMB : StateMachineBehaviour
         }
 
         dist = Vector3.Distance(target.TargetPosition, animator.rootPosition);
-        isSkip =  dist > assistDistance || dist < 2;
+        isSkip = dist > assistDistance || dist < 2;
     }
 
     public override void OnStateIK(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
@@ -44,7 +44,7 @@ public class MatchPositionSMB : StateMachineBehaviour
             animator.InterruptMatchTarget(false);
         }
         else 
-        {            
+        {
             animator.MatchTarget(
                 target.TargetPosition,
                 animator.bodyRotation,

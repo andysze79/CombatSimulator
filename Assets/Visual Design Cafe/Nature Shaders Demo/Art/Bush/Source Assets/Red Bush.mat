@@ -155,6 +155,7 @@ Material:
     - _TranslucencyColor: {r: 1, g: 1, b: 1, a: 1}
     - _TrunkBendFactor: {r: 1.371, g: 1.036, b: 0, a: 0}
     - _WindFade: {r: 50, g: 20, b: 0, a: 0}
+  m_BuildTextureStacks: []
 --- !u!114 &4817671766905052037
 MonoBehaviour:
   m_ObjectHideFlags: 11

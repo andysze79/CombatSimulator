@@ -9,24 +9,16 @@ AnimatorOverrideController:
   m_Name: Melee_Katana
   m_Controller: {fileID: 9100000, guid: 6d2dda1d3e686274485dcaf68d089708, type: 2}
   m_Clips:
-  - m_OriginalClip: {fileID: -203655887218126122, guid: 3d12221df4a2bb14b83cdd4455e89db2,
-      type: 3}
-    m_OverrideClip: {fileID: 7400000, guid: 782e88d9d1c6f4948a0b96b901013571, type: 3}
-  - m_OriginalClip: {fileID: -203655887218126122, guid: 725a4b5469b5fdc4ab2a1a2998f498f6,
-      type: 3}
-    m_OverrideClip: {fileID: 7400000, guid: f6696522ad80ee241b9206c71df2cf2f, type: 3}
   - m_OriginalClip: {fileID: -6850073443010497614, guid: 44c7bec2837d73748a0b2ae7fd6dbd15,
       type: 3}
-    m_OverrideClip: {fileID: -429382815031033906, guid: d3c22b278e054d34684a6823d4ffb405,
-      type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: 7b8fd51d43131fb4781fc03b03758b9c, type: 2}
   - m_OriginalClip: {fileID: 4075661644736971061, guid: 2abb1728458870a4bb830fbcaff7f485,
       type: 3}
     m_OverrideClip: {fileID: 4075661644736971061, guid: 7223b938de6e6004b94062c41e22f041,
       type: 3}
   - m_OriginalClip: {fileID: 8396495322823988928, guid: 44c7bec2837d73748a0b2ae7fd6dbd15,
       type: 3}
-    m_OverrideClip: {fileID: -5405653242291790180, guid: d3c22b278e054d34684a6823d4ffb405,
-      type: 3}
+    m_OverrideClip: {fileID: 7400000, guid: 9257ee071eecc644d949077b6a15db9d, type: 2}
   - m_OriginalClip: {fileID: -2363271764229002893, guid: 44c7bec2837d73748a0b2ae7fd6dbd15,
       type: 3}
     m_OverrideClip: {fileID: -2363271764229002893, guid: 7223b938de6e6004b94062c41e22f041,

@@ -12,8 +12,13 @@ namespace CombateSimulator.PlayerFSM
         [ReadOnly][SerializeField] protected List<State> m_States;
         [ReadOnly][SerializeField] protected State currentState;
         [ReadOnly][SerializeField] protected State previousState;
-        
-        public ReferenceKeeper referenceKeeper{ get; set; }
+
+        private ReferenceKeeper m_ReferenceKeeper;
+        public ReferenceKeeper referenceKeeper{ 
+            get { 
+                if (m_ReferenceKeeper == null)
+                    m_ReferenceKeeper = GetComponent<ReferenceKeeper>(); 
+                return m_ReferenceKeeper; } }
         public PlayerDataHolder playerData{ get; set; }
         public PlayerLogic playerLogic{ get; set; }
 
@@ -30,8 +35,11 @@ namespace CombateSimulator.PlayerFSM
             
             EnterState(m_InitialState.GetType());
         }
+        protected void Update()
+        {
+            currentState?.DoAbility(referenceKeeper);
+        }
         private void GetReference() {
-            referenceKeeper = GetComponent<ReferenceKeeper>();
             playerLogic = referenceKeeper.PlayerLogic;
             playerData = referenceKeeper.PlayerData;
         }
@@ -47,6 +55,8 @@ namespace CombateSimulator.PlayerFSM
             }
 
             currentState.enabled = true;
+            previousState?.EndAbility(referenceKeeper);
+            currentState?.StartAbility(referenceKeeper);
         }
     }
 }

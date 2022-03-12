@@ -18,12 +18,15 @@ public class PlayerDataHolder : MonoBehaviour
     [Tooltip("Additional degress to override the camera. Useful for fine tuning camera position when locked")]
     public float CameraAngleOverride = 0.0f;
     [Tooltip("For locking the camera position on all axis")]
-    public bool LockCameraPosition = false;
+    public bool LockCameraPosition = false;    
     [Header("Health Settings")]
     [SerializeField] private float m_MaxHealth = 100;
+    [Header("Guar State")]
+    [SerializeField] private float m_GuardTrasitionDuration;
     [Header("Move State")]
     [SerializeField] private CharacterController m_CharacterController;
     [SerializeField] private float m_MoveSpeed;
+    [SerializeField] private float m_RunSpeed;
     [SerializeField] private float m_RotateSpeed;
     [SerializeField] private float m_Gravity = -9.8f;
     [SerializeField] private string m_RunHorizontalName;
@@ -50,9 +53,15 @@ public class PlayerDataHolder : MonoBehaviour
     [FoldoutGroup("Animator Trigger Name")]
     [SerializeField] private string m_DashName;
     [FoldoutGroup("Animator Trigger Name")]
+    [SerializeField] private string m_isRunningName;
+    [FoldoutGroup("Animator Trigger Name")]
     [SerializeField] private string m_HitKnockbackName;
     [FoldoutGroup("Animator Trigger Name")]
+    [SerializeField] private string m_GuardName;
+    [FoldoutGroup("Animator Trigger Name")]
     [SerializeField] private string m_ReflectName;
+    [FoldoutGroup("Animator Trigger Name")]
+    [SerializeField] private string m_LockOnName;
     [FoldoutGroup("Animator Trigger Name")]
     [SerializeField] private string m_JumpName;
     [FoldoutGroup("Animator Trigger Name")]
@@ -89,6 +98,7 @@ public class PlayerDataHolder : MonoBehaviour
     [SerializeField] private LayerMask m_SearchLayer;
     [Min(.2f)][SerializeField] private float m_SwitchTargetCDTime;
     [SerializeField] private float m_FacingTargetSpeed = 10;
+    [SerializeField] private float m_LockOnAnimatorTrasitionDuration = .3f;
 
     [FoldoutGroup("Combo Setting")]
     [SerializeField] private EnumHolder.ComboCounter m_Melee1LastCombo;
@@ -145,11 +155,13 @@ public class PlayerDataHolder : MonoBehaviour
     [FoldoutGroup("Debug Monitor Section")]
     [SerializeField] private EnumHolder.ComboCounter m_CurrentCombo;
 
-    public Camera _3rdPersonCamera { get { return m_3rdPersonCamera; } }
+    public Camera _3rdPersonCamera { get { return m_3rdPersonCamera; } set { m_3rdPersonCamera = value; } }
     public float RotationSmoothTime { get { return m_RotationSmoothTime; } }
     public float MaxHealth { get { return m_MaxHealth; } }
     public CharacterController CharacterController { get { return m_CharacterController; } }
+    public float GuardTrasitionDuration { get { return m_GuardTrasitionDuration; } }
     public float MoveSpeed { get { return m_MoveSpeed; } }
+    public float RunSpeed { get { return m_RunSpeed; } }
     public float RotateSpeed { get { return m_RotateSpeed; } }
     public float Gravity { get { return m_Gravity; } }
     public string RunHorizontalName { get { return m_RunHorizontalName; } }
@@ -168,6 +180,7 @@ public class PlayerDataHolder : MonoBehaviour
     public float FacingEnemySpeed { get {return m_FacingEnemySpeed; } }
     public float SwitchTargetCDTime { get {return m_SwitchTargetCDTime; } }
     public float FacingTargetSpeed { get {return m_FacingTargetSpeed; } }
+    public float LockOnAnimatorTrasitionDuration { get {return m_LockOnAnimatorTrasitionDuration; } }
     public bool JumpCD { get; set; }
     public bool DashCD { get; set; }
     public bool SwitchTargetCD { get; set; }
@@ -176,8 +189,11 @@ public class PlayerDataHolder : MonoBehaviour
     public float InputCDTime { get { return m_InputCDTime; } }
     public EnumHolder.AttackStyle CurrentAttackStyle { get { return m_CurrentAttackStyle; }set { m_CurrentAttackStyle = value; } }
     public string DashName { get { return m_DashName; } }
+    public string isRunningName { get { return m_isRunningName; } }
     public string HitKnockbackName { get { return m_HitKnockbackName; } }
+    public string GuardName { get { return m_GuardName; } }
     public string ReflectName { get { return m_ReflectName; } }
+    public string LockOnName { get { return m_LockOnName; } }
     public string JumpName { get { return m_JumpName; } }
     public string isGroundedName { get { return m_isGroundedName; } }
     public string isInAirName { get { return m_isInAirName; } }

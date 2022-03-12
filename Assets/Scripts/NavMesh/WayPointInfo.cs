@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class WayPointInfo : MonoBehaviour
 {
-    [SerializeField]private float[] m_LookAroundRange = new float[2];
+    [Range(-360,360)][SerializeField]private float[] m_LookAroundRange = new float[2];
     [SerializeField]private bool m_ShowGizmos;
     public float[] LookAroundRange { get { return m_LookAroundRange; } }
     public void OnDrawGizmos()

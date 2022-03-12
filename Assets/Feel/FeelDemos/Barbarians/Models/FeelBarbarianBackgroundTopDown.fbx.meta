@@ -3,7 +3,87 @@ guid: 39dda57e2d7e23d4f843bbd5c20483b3
 ModelImporter:
   serializedVersion: 19301
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Dirt
+    second: {fileID: 2100000, guid: c2a82cb189162bc4a93e2ba105a016a1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GreenLand
+    second: {fileID: 2100000, guid: a74cf4436c96c164eb30a68b73bf783f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Leaves
+    second: {fileID: 2100000, guid: 55b98f49e891b9b4f973013640209ae2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Leaves.001
+    second: {fileID: 2100000, guid: d18b2976ea144184bbdbf760f603a503, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Leaves.002
+    second: {fileID: 2100000, guid: 8156c942892715f4688478249e43f74b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Leaves.003
+    second: {fileID: 2100000, guid: 8c376321d39e3e142bab45556d024736, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Leaves.004
+    second: {fileID: 2100000, guid: 42b1213b3a7ec1e41bd2ce16987882cb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Leaves.005
+    second: {fileID: 2100000, guid: 85c8c4c0101d99848b9c33346bbe610d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RockyHill
+    second: {fileID: 2100000, guid: 0a7a21a374eaad34191996a7a5beead8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wood
+    second: {fileID: 2100000, guid: 1313bbb44d1cea149837a829bfedf363, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wood.001
+    second: {fileID: 2100000, guid: 5a318a76a8acb064c8243edfeafee33c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wood.002
+    second: {fileID: 2100000, guid: f2bde8098ed731d41ab7cc32a0983af3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wood.003
+    second: {fileID: 2100000, guid: d2164ca4345e80c4cb1a27604c4d83d5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wood.004
+    second: {fileID: 2100000, guid: 202df4d55a253e647978a00d7418602e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wood.005
+    second: {fileID: 2100000, guid: bcb4a3cd57c3d7c41b2eb0c2485efade, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: rock
+    second: {fileID: 2100000, guid: d6a7cc111fa760543b7049ebed286947, type: 2}
   materials:
     materialImportMode: 1
     materialName: 0

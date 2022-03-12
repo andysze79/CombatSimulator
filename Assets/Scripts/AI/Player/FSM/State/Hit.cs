@@ -11,15 +11,17 @@ namespace CombateSimulator.PlayerFSM
             if (process != null)
                 StopCoroutine(process);
             process = StartCoroutine(HitStunDuration());
+
+            stateMachine.playerLogic.CancelMovement();
         }
         protected override void OnDisable()
         {
-            
+
         }
         
         protected override void Update()
         {
-
+            stateMachine.playerLogic.ApplyGravity();
         }
         private IEnumerator HitStunDuration() {
             yield return new WaitForSeconds(stateMachine.playerData.StunDuration);

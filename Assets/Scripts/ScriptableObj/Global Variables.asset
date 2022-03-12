@@ -14,3 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_DefenseMulCoe: 20
   m_DefensePushBackDevideCoe: 1.5
+  m_WallLayer:
+    serializedVersion: 2
+    m_Bits: 512
+  m_HitWallCheckingRayLength: 0.6

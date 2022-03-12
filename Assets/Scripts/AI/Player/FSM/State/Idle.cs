@@ -39,7 +39,8 @@ namespace CombateSimulator.PlayerFSM
         }
         protected override void Update()
         {            
-            
+            if(!stateMachine.playerLogic.CheckGrounded())
+                stateMachine.EnterState(typeof(Jump));
         }
         protected override void WhenReceiveJoystick1Input(float horizontal, float vertical)
         {

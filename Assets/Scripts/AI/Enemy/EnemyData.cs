@@ -35,6 +35,8 @@ namespace CombateSimulator.EnemyAI
         [BoxGroup("Search Settings")]
         public float m_ChaseDistance = 10;
         [BoxGroup("Attack Settings")]
+        public bool m_CheckAttackPositionFromAnimationEvent = false;
+        [BoxGroup("Attack Settings")]
         public float m_AttackRange = 1;
         [BoxGroup("Attack Settings")]
         public float m_FacingSpeed = 10;
@@ -65,7 +67,13 @@ namespace CombateSimulator.EnemyAI
         [BoxGroup("Defense Settings")]
         public int m_DefenseAnimatorLayerIndex;
         [BoxGroup("Defense Settings")]
-        public float m_DefenseSwitchLayerDuration;        
+        public float m_DefenseSwitchLayerDuration;
+        [FoldoutGroup("Attack Assistance Settings")]
+        public float m_AttackAssistRange;
+        [FoldoutGroup("Attack Assistance Settings")]
+        public float m_AssistDuration;
+        [FoldoutGroup("Attack Assistance Settings")]
+        public AnimationCurve m_AssistMovement;
         [BoxGroup("Status Settings")]
         public float m_MaxHealth = 100;
         [FoldoutGroup("AnimationTrigger")]

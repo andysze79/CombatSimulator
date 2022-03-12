@@ -7,12 +7,14 @@ using Sirenix.OdinInspector;
 public class AttackStyleSettings : ScriptableObject
 {
     public string m_Weapon;
+    public enum AttackFeedback { LightDamage, MildDamage, HardDamage}
     [System.Serializable]
     public struct ComboDetails
     {        
         public int DamageAmount;
         public float PushDistance;
         public float PushDuration;
+        public AttackFeedback AttackFeedback;
         public AnimationCurve PushBackMovement;
     }
     [ListDrawerSettings(ShowIndexLabels = true)]

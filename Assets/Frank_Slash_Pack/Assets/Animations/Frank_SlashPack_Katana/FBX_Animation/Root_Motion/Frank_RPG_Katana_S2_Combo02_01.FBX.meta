@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: d3c22b278e054d34684a6823d4ffb405
 ModelImporter:
-  serializedVersion: 19301
+  serializedVersion: 20200
   internalIDToNameTable:
   - first:
       1: 100000
@@ -741,7 +741,7 @@ ModelImporter:
       name: Melee1_Combo1
       takeName: Take 001
       internalID: 0
-      firstFrame: 0
+      firstFrame: 8
       lastFrame: 30
       wrapMode: 0
       orientationOffsetY: 0
@@ -762,7 +762,7 @@ ModelImporter:
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
       events:
-      - time: 0.1799307
+      - time: 0
         functionName: CheckComboStart
         data: 
         objectReferenceParameter: {instanceID: 0}
@@ -790,7 +790,7 @@ ModelImporter:
         floatParameter: 0
         intParameter: 1
         messageOptions: 0
-      - time: 0.94310725
+      - time: 0.93536353
         functionName: CheckComboEnd
         data: 
         objectReferenceParameter: {instanceID: 0}
@@ -1012,19 +1012,19 @@ ModelImporter:
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
-      - time: 0.17258196
-        functionName: CheckComboStart
-        data: 
-        objectReferenceParameter: {instanceID: 0}
-        floatParameter: 0
-        intParameter: 0
-        messageOptions: 0
       - time: 0.23088457
         functionName: TurnOnDamageTrigger
         data: 
         objectReferenceParameter: {instanceID: 0}
         floatParameter: 0
         intParameter: 2
+        messageOptions: 0
+      - time: 0.2518272
+        functionName: CheckComboStart
+        data: 
+        objectReferenceParameter: {instanceID: 0}
+        floatParameter: 0
+        intParameter: 0
         messageOptions: 0
       - time: 0.49812597
         functionName: TurnOffDamageTrigger
@@ -1033,7 +1033,7 @@ ModelImporter:
         floatParameter: 0
         intParameter: 2
         messageOptions: 0
-      - time: 0.7588634
+      - time: 0.8135804
         functionName: CheckComboEnd
         data: 
         objectReferenceParameter: {instanceID: 0}
@@ -1241,6 +1241,7 @@ ModelImporter:
     useFileUnits: 1
     keepQuads: 0
     weldVertices: 1
+    bakeAxisConversion: 0
     preserveHierarchy: 0
     skinWeightsMode: 0
     maxBonesPerVertex: 4
@@ -1250,6 +1251,9 @@ ModelImporter:
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
     secondaryUVPackMargin: 4
     useFileScale: 1
   tangentSpace:
@@ -2132,6 +2136,7 @@ ModelImporter:
   animationType: 3
   humanoidOversampling: 1
   avatarSetup: 2
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 0
   additionalBone: 0
   userData: 
   assetBundleName: 

@@ -17,13 +17,13 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 0a8ce7d2860110e479e3c0347dfd2f19, type: 2}
   transitions:
   - decision:
-    - {fileID: 11400000, guid: 3be6ac8baa0278f40a1a8a634949d5d6, type: 2}
+    - {fileID: 11400000, guid: 83ef6b98fb2cab4448608d9ae618cc75, type: 2}
     - {fileID: 11400000, guid: c95882aba4df47b4ba576f11ad955493, type: 2}
     logic: 1
     trueState: {fileID: 11400000, guid: 790df1433c1912049b31c4999813128b, type: 2}
     falseState: {fileID: 11400000, guid: bc4ab764f1eeb334fb0d008b3d7e5e74, type: 2}
   - decision:
-    - {fileID: 11400000, guid: 3be6ac8baa0278f40a1a8a634949d5d6, type: 2}
+    - {fileID: 11400000, guid: 83ef6b98fb2cab4448608d9ae618cc75, type: 2}
     logic: 0
     trueState: {fileID: 11400000, guid: bc4ab764f1eeb334fb0d008b3d7e5e74, type: 2}
     falseState: {fileID: 11400000, guid: 9c101f0f9fc2f5b4eb58cd07e2d8b4e5, type: 2}

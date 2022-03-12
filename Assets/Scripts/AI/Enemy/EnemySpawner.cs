@@ -8,6 +8,7 @@ public class EnemySpawner : MonoBehaviour
     public static event Action<EnemySpawner> OnSpawn = delegate { };
     public int m_SpawnerIndex;
     public List<EnemySpawnersController.EnemiesWayPointsLibrary> m_SpawnerSettings = new List<EnemySpawnersController.EnemiesWayPointsLibrary>();
+    public bool Spawned { get; set; }
     private TriggerBase TriggerBase { get; set; }
     private void OnEnable()
     {
@@ -19,6 +20,8 @@ public class EnemySpawner : MonoBehaviour
         TriggerBase.TriggerEnter -= PlayerEnterBattleArea;        
     }
     private void PlayerEnterBattleArea(Collider other) {
+        if (Spawned) return;
         OnSpawn(this);
+        Spawned = true;
     }
 }

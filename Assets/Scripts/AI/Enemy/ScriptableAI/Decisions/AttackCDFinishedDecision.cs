@@ -5,7 +5,7 @@ using UnityEngine;
 public class AttackCDFinishedDecision : Decision
 {
     public override bool Decide(StateController controller)
-    {        
+    {
         return !controller.enemyStats.AttackCD;
     }
 }

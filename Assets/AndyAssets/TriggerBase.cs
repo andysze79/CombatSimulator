@@ -20,6 +20,7 @@ public class TriggerBase : MonoBehaviour
 
     public delegate void TriggerDelegate(Collider target);
     public TriggerDelegate TriggerEnter;
+    public TriggerDelegate TriggerStay;
     public TriggerDelegate TriggerExit;
 
     public float m_DelayTime = 1f;
@@ -50,6 +51,7 @@ public class TriggerBase : MonoBehaviour
         if (other.tag == m_Tag || 1 << other.gameObject.layer == m_TargetLayer)
         {
             WhenTriggerStay.Invoke();
+            TriggerStay?.Invoke(other);
         }
     }
     public virtual void OnTriggerExit(Collider other)

@@ -6,7 +6,7 @@ using UnityEngine;
 public class State : ScriptableObject
 {
     public enum AnimationTriggerName { 
-        Idle, Run, Attack, Hit, Death, None
+        Idle, Run, Attack, Hit, Death, ReflectAttack,None
     }    
     public Action[] actions;
     public Transition[] transitions;

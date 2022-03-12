@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using CombateSimulator.EnemyAI;
+using Sirenix.OdinInspector;
 
 namespace CombateSimulator
 {
@@ -9,13 +10,24 @@ namespace CombateSimulator
     {
         public GlobalVariables m_GlobalVariables;
         public EnemiesLibrary m_EnemiesLibrary;
+        public VFXLibrary m_VFXLibrary;
         public MoreMountains.Feedbacks.MMFeedbacks m_ReceiveDamageFeedback;
-        public EnemySpawnersController m_EnemySpawnersController;
+        [ReadOnly]public EnemySpawnersController m_EnemySpawnersController;
+        [ReadOnly]public GlobalVFXController m_GlobalVFXController;
         public EnemySpawnersController EnemySpawnersController { get {
                 if (m_EnemySpawnersController == null)
                     m_EnemySpawnersController = GetComponent<EnemySpawnersController>();
                 return m_EnemySpawnersController;
             } 
+        }
+        public GlobalVFXController GlobalVFXController
+        {
+            get
+            {
+                if (m_GlobalVFXController == null)
+                    m_GlobalVFXController = GetComponent<GlobalVFXController>();
+                return m_GlobalVFXController;
+            }
         }
         public Camera MainCamera { get; set; }
         public static GameManager m_Instance;

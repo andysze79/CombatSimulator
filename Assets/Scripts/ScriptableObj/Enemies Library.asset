@@ -25,3 +25,9 @@ MonoBehaviour:
     EnemyAIType: 1
     Prefab: {fileID: 4356007549282079136, guid: b2b4726080c35ef419301f7f7686d9ae,
       type: 3}
+  - ID: 
+    EnemyGenra: 1
+    EnemyClass: 0
+    EnemyAIType: 0
+    Prefab: {fileID: 1895308851001390538, guid: 24c9bdbeb384e904cbc050a652275b01,
+      type: 3}

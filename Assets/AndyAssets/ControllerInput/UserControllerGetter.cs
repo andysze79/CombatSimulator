@@ -23,7 +23,9 @@ public class UserControllerGetter : MonoBehaviour
     [SerializeField] private string m_Horizontal = "Horizontal";
     [SerializeField] private string m_Vertical = "Vertical";
     [SerializeField] private string m_JumpName = "Jump";
+    [SerializeField] private string m_RunName = "Run";
     [SerializeField] private string m_DashName = "Dash";
+    [SerializeField] private string m_GuardName = "Guard";
     [SerializeField] private string m_LockOnName = "LockOn";
     [SerializeField] private string m_Fight1Name = "Fire1";
     [SerializeField] private string m_Fight2Name = "Fire2";
@@ -43,18 +45,24 @@ public class UserControllerGetter : MonoBehaviour
     public float JumpValue { get; set; }
     public float DashValue { get; set; }
     public float LockOnValue { get; set; }
+    public bool RunValue { get; set; }
     public bool Fight1Value { get; set; }
     public bool Fight2Value { get; set; }
     public bool Fight3Value { get; set; }
 
     public delegate void Joystick1Input(float HorizontalValue, float VerticalValue);    
+    public delegate void AxisInput(float value);    
     public Joystick1Input MouseInputDelegate; 
     public Joystick1Input Joystick1InputDelegate; 
     public delegate void Fight1();
+    public Fight1 RunDownDelegate;
+    public Fight1 RunUpDelegate;
     public Fight1 JumpDownDelegate;
     public Fight1 JumpUpDelegate;
     public Fight1 DashDownDelegate;
-    public Fight1 DashUpDelegate; 
+    public Fight1 DashUpDelegate;
+    public Fight1 GuardDownDelegate;
+    public Fight1 GuardUpDelegate;
     public Fight1 LockOnDownDelegate;
     public Fight1 LockOnUpDelegate;
     public Fight1 Fight1DownDelegate;
@@ -65,6 +73,8 @@ public class UserControllerGetter : MonoBehaviour
     public delegate void Fight3();
     public Fight3 Fight3DownDelegate;
     public Fight3 Fight3UpDelegate;
+    public AxisInput Fight3Delegate;
+
 
     public float HorizontalController { get; set; }
     public float VerticalController { get; set; }
@@ -103,6 +113,9 @@ public class UserControllerGetter : MonoBehaviour
                 VerticalValue = Input.GetAxisRaw(m_Vertical);
 
                 Joystick1InputDelegate?.Invoke(HorizontalValue, VerticalValue);
+
+                Fight3Delegate?.Invoke(Input.GetAxis(m_Fight3Name));
+
                 //if (HorizontalValue != 0 || VerticalValue != 0)
                 //    Joystick1InputDelegate?.Invoke(HorizontalValue, VerticalValue);
                 //else
@@ -115,12 +128,28 @@ public class UserControllerGetter : MonoBehaviour
                 if (Input.GetButtonUp(m_JumpName)) {
                     JumpUpDelegate?.Invoke();
                 }
+                if (Input.GetButtonDown(m_RunName))
+                {
+                    RunDownDelegate?.Invoke();
+                }
+                if (Input.GetButtonUp(m_RunName))
+                {
+                    RunUpDelegate?.Invoke();
+                }
                 if (Input.GetButtonDown(m_DashName)) {
                     DashDownDelegate?.Invoke();
                 }
                 if (Input.GetButtonUp(m_DashName))
                 {
                     DashUpDelegate?.Invoke();
+                }
+                if (Input.GetButtonDown(m_GuardName))
+                {
+                    GuardDownDelegate?.Invoke();
+                }
+                if (Input.GetButtonUp(m_GuardName))
+                {
+                    GuardUpDelegate?.Invoke();
                 }
                 if (Input.GetButtonDown(m_LockOnName))
                 {

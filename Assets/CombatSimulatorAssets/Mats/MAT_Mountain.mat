@@ -165,6 +165,7 @@ Material:
     - _TreeInstanceColor: {r: 1, g: 1, b: 1, a: 1}
     - _TreeInstanceScale: {r: 1, g: 1, b: 1, a: 1}
     - _WindMultiplier: {r: 1, g: 2, b: 1, a: 0}
+  m_BuildTextureStacks: []
 --- !u!114 &6122348556718544950
 MonoBehaviour:
   m_ObjectHideFlags: 11

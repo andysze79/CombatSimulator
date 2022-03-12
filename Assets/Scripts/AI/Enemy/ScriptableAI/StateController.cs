@@ -7,12 +7,12 @@ using UnityEngine.AI;
 
 public class StateController : MonoBehaviour
 {
-    
+
     public State currentState;
     public Transform eyes;
     [FoldoutGroup("States Settings")] public State remainState;
-    [FoldoutGroup("States Settings")] public State HitState;    
-    [FoldoutGroup("States Settings")] public State DefenseHitState;    
+    [FoldoutGroup("States Settings")] public State HitState;
+    [FoldoutGroup("States Settings")] public State DefenseHitState;
     [ReadOnly] [FoldoutGroup("Debug")] public State previousState;
     [ReadOnly] [FoldoutGroup("Debug")] public EnemyData enemyStats;
     [ReadOnly] [FoldoutGroup("Debug")] public EnemyLogic enemyLogic;
@@ -20,15 +20,15 @@ public class StateController : MonoBehaviour
     [ReadOnly] [FoldoutGroup("Debug")] public Transform chaseTarget;
     [HideInInspector] public NavMeshAgent navMeshAgent;
     [HideInInspector] public Animator animator;
-    /*[HideInInspector] */public List<Transform> wayPointList;
+    /*[HideInInspector] */
+    public List<Transform> wayPointList;
     [HideInInspector] public int nextWayPoint;
 
     private bool aiActive;
     public float LookAroundStep { get; set; }
     public Vector3 rot { get; set; }
     public Vector3 LookAroundFrom { get; set; }
-    public Vector3 LookAroundTo { get; set; }
-
+    public Vector3 LookAroundTo { get; set; }    
     Coroutine AttackCDProgress { get; set; }
 
     void Awake()

@@ -6,7 +6,8 @@ namespace CombateSimulator.PlayerFSM
 {
     public abstract class State : MonoBehaviour
     {        
-        public StateMachine stateMachine { get; set; }        
+        public StateMachine stateMachine { get; set; }
+        public List<Ability> m_Abilities = new List<Ability>();
         protected void Awake()
         {
             stateMachine = GetComponent<StateMachine>();
@@ -14,6 +15,26 @@ namespace CombateSimulator.PlayerFSM
         protected abstract void OnEnable();
         protected abstract void OnDisable();
         protected abstract void Update();
+        public void StartAbility(ReferenceKeeper playerRef) {
+            for (int i = 0; i < m_Abilities.Count; i++)
+            {
+                m_Abilities[i].StartAbility(playerRef);
+            }
+        }
+        public void DoAbility(ReferenceKeeper playerRef)
+        {
+            for (int i = 0; i < m_Abilities.Count; i++)
+            {
+                m_Abilities[i].DoAbility(playerRef);
+            }
+        }
+        public void EndAbility(ReferenceKeeper playerRef)
+        {
+            for (int i = 0; i < m_Abilities.Count; i++)
+            {
+                m_Abilities[i].EndAbility(playerRef);
+            }
+        }
         protected virtual void WhenReceiveJoystick1Input(float horizontal, float vertical)
         {
             

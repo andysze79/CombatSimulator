@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
 using System.Linq;
+using DG.Tweening;
 
 public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagable, IHealthBehavior, IAnimationEvent
 {
@@ -44,12 +45,15 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     public List<Collider> CurrentEnemies = new List<Collider>();
     public List<Collider> SortedTarget = new List<Collider>();
 
-    public Vector3 moveValue;
+    [ReadOnly] public Vector3 moveValue;
+    [ReadOnly] public Vector3 moveValueRaw;
     public delegate void StateMachineDel();
     public StateMachineDel WhenGetDamage;
 
     public event System.Action<float> OnHealthPercentageChanged;
-    
+
+    public System.Action OnAttackStateExitDel = delegate { };
+
     List<GameObject> AssignedTrigger = new List<GameObject>();
     Coroutine LockOnProcess { get; set; }
     private ParticleSystem CurrentAttackVFX { get; set; }
@@ -58,11 +62,24 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     public float HealthPercentage { get; set; }
     public Transform HealthObject { get; set; }
     private DamageTrigger HitTrigger { get; set; }
-    [ShowInInspector]private bool AttackSuccess = true;// { get; set; }
+    public float CharactorControllerSlopeLimitDefault { get; private set; }
+    public float CharactorControllerStepOffsetDefault { get; private set; }
+    /// <summary>
+    /// This boolean indicate whether the combe is ended and is not within the duration between attackended event and state exit
+    /// </summary>
+    private bool DurationFromAttackEndedToStateExitWhenComboEnded { get; set; }
 
+    [ShowInInspector]private bool AttackSuccess = true;// { get; set; }
+    private float currentMoveSpeed { get; set; }
+    private bool isJumping { get; set; }
+    
     private void OnEnable()
     {
-        referenceKeeper = GetComponent<ReferenceKeeper>();       
+        referenceKeeper = GetComponent<ReferenceKeeper>();        
+        CharactorControllerSlopeLimitDefault = referenceKeeper.PlayerData.CharacterController.slopeLimit;
+        CharactorControllerStepOffsetDefault = referenceKeeper.PlayerData.CharacterController.stepOffset;
+        
+        currentMoveSpeed = referenceKeeper.PlayerData.MoveSpeed;
     }
 
     private void Update()
@@ -125,6 +142,8 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
             smb.target = this;
         }
 
+        ActivateGuard();
+
         // Assign input delegate function
         if (m_ConnectWithStateMachine) return;
         ActivateMelee();
@@ -155,6 +174,8 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
             HitTrigger.TriggerEnter -= PlayHitVFX;
         }
 
+        DeactivateGuard();
+
         if (m_ConnectWithStateMachine) return;
         DeactivateMelee();
         DeactivateCamera();
@@ -183,26 +204,34 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
 
             AssignedTrigger.Add(meleeComboTrigger[i]);
         }
-    }    
+    }
     #endregion
-
     #region Moving
-    public void ActivateMove() {        
-        UserControllerGetter.Instance.Joystick1InputDelegate += CheckMove;        
-        UserControllerGetter.Instance.Joystick1InputDelegate += CheckRotate;        
+    public int activateMoveCount;
+    public void ActivateMove() {
+        UserControllerGetter.Instance.Joystick1InputDelegate += CheckMove;
+        ActivateRotate();    
         UserControllerGetter.Instance.Joystick1InputDelegate += SetAnimatorFloat;
 
         UserControllerGetter.Instance.JumpDownDelegate += CheckJump;
+        UserControllerGetter.Instance.JumpUpDelegate += CheckFinishedJump;
         UserControllerGetter.Instance.DashDownDelegate += CheckDash;
+        UserControllerGetter.Instance.RunDownDelegate += CheckRun;
+        UserControllerGetter.Instance.RunUpDelegate += CheckFinishedRun;
     }
-    public void DeactivateMove() {
+    public void DeactivateMove() {        
         UserControllerGetter.Instance.Joystick1InputDelegate -= CheckMove;
-        UserControllerGetter.Instance.Joystick1InputDelegate -= CheckRotate;        
+        DeactivateRotate();      
         UserControllerGetter.Instance.Joystick1InputDelegate -= SetAnimatorFloat;        
 
         UserControllerGetter.Instance.JumpDownDelegate -= CheckJump;
-        UserControllerGetter.Instance.DashDownDelegate -= CheckDash;
-    }    
+        UserControllerGetter.Instance.JumpUpDelegate -= CheckFinishedJump;
+        UserControllerGetter.Instance.DashDownDelegate -= CheckDash; 
+        UserControllerGetter.Instance.RunDownDelegate -= CheckRun;
+        UserControllerGetter.Instance.RunUpDelegate -= CheckFinishedRun;
+    }
+    public void ActivateRotate() { activateMoveCount++; UserControllerGetter.Instance.Joystick1InputDelegate += CheckRotate; }
+    public void DeactivateRotate() { activateMoveCount--; UserControllerGetter.Instance.Joystick1InputDelegate -= CheckRotate; }
     private void CheckMove(float horizontal, float vertical) {
 
         moveValue = new Vector3(horizontal, 0, vertical);
@@ -210,15 +239,32 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         var ChangeToCameraAlginment = Quaternion.AngleAxis(Camera.main.transform.eulerAngles.y, Vector3.up);
                 
         moveValue = ChangeToCameraAlginment * moveValue;
-        moveValue = moveValue * Time.deltaTime * referenceKeeper.PlayerData.MoveSpeed;
+        moveValueRaw = moveValue;
+        moveValue = moveValue * Time.deltaTime * currentMoveSpeed;
 
         // Gravity
-        moveValue.y = referenceKeeper.PlayerData.Gravity * Time.deltaTime;
+        ApplyGravity();
 
         referenceKeeper.PlayerData.CharacterController.Move(moveValue);
     }
+    public void CancelMovement()
+    {
+        moveValue = Vector3.zero;
+    }
+    public void ApplyGravity()
+    {
+        //moveValue = Vector3.zero;
+        moveValue.y = referenceKeeper.PlayerData.Gravity * Time.deltaTime;
+    }
+    private void CheckRun() {
+        currentMoveSpeed = referenceKeeper.PlayerData.RunSpeed;
+        referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.isRunningName, true);
+    }
+    private void CheckFinishedRun() { 
+        currentMoveSpeed = referenceKeeper.PlayerData.MoveSpeed;        
+        referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.isRunningName, false);
+    }
     private void CheckRotate(float horizontal, float vertical) {
-
         if (horizontal == 0 && vertical == 0) return;
 
         var moveDir = new Vector3(horizontal, 0, vertical);
@@ -226,6 +272,9 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         var ChangeToCameraAlginment = Quaternion.AngleAxis(Camera.main.transform.eulerAngles.y, Vector3.up);
 
         var targetDir = ChangeToCameraAlginment * moveDir;
+
+        if (targetCollider && referenceKeeper.PlayerData.m_LockOn)
+            targetDir = (targetCollider.transform.position - referenceKeeper.PlayerData.CharacterController.transform.position).normalized;
 
         var newRot = Quaternion.LookRotation(targetDir);
 
@@ -242,7 +291,6 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         referenceKeeper.AnimationPlayer.AnimatorRef.SetFloat(referenceKeeper.PlayerData.RunHorizontalName, horizontal);
         referenceKeeper.AnimationPlayer.AnimatorRef.SetFloat(referenceKeeper.PlayerData.RunVerticalName, vertical);
     }
-
     public void CharacterFacingEnemy(float facingSpeed) {
         if (targetCollider == null) return;
 
@@ -258,6 +306,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     }
 
     #region Jump
+
     public bool CheckGrounded() {
         return Physics.CheckSphere(
             referenceKeeper.PlayerData.CharacterController.transform.position, 
@@ -279,6 +328,8 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     {
         if (!CheckGrounded() || referenceKeeper.PlayerData.JumpCD) return;
 
+        isJumping = true;
+
         if (jumpProcess != null)
             StopCoroutine(jumpProcess);
 
@@ -287,8 +338,11 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         SetAnimatorTrigger(referenceKeeper.PlayerData.JumpName);
 
         referenceKeeper.PlayerData.JumpCD = true;
+
     }
-    
+    private void CheckFinishedJump() {
+        isJumping = false;
+    }
     private IEnumerator JumpProcess()
     {        
         var startTime = Time.time;
@@ -341,15 +395,29 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
 
     #endregion
 
+    #region Guard
+    public void ActivateGuard()
+    {
+        UserControllerGetter.Instance.GuardDownDelegate += StartGuard;
+        UserControllerGetter.Instance.GuardUpDelegate += EndGuard;
+    }
+    public void DeactivateGuard()
+    {
+        UserControllerGetter.Instance.GuardDownDelegate -= StartGuard;
+        UserControllerGetter.Instance.GuardUpDelegate -= EndGuard;
+    }
+    public void StartGuard() { referenceKeeper.AnimationPlayer.SetFloat(referenceKeeper.PlayerData.GuardName, 1, referenceKeeper.PlayerData.GuardTrasitionDuration); }
+    public void EndGuard() { referenceKeeper.AnimationPlayer.SetFloat(referenceKeeper.PlayerData.GuardName, 0, referenceKeeper.PlayerData.GuardTrasitionDuration); }
+    #endregion
     #region Melee
     public void ActivateMelee() {
-        UserControllerGetter.Instance.Fight1UpDelegate += Melee1Attack;
+        UserControllerGetter.Instance.Fight1DownDelegate += Melee1Attack;
         UserControllerGetter.Instance.Fight2DownDelegate += Melee2ButtonDown;
         UserControllerGetter.Instance.Fight2UpDelegate += Melee2Attack;
     }
     public void DeactivateMelee()
     {
-        UserControllerGetter.Instance.Fight1UpDelegate -= Melee1Attack;
+        UserControllerGetter.Instance.Fight1DownDelegate -= Melee1Attack;
         UserControllerGetter.Instance.Fight2DownDelegate -= Melee2ButtonDown;
         UserControllerGetter.Instance.Fight2UpDelegate -= Melee2Attack;
     }    
@@ -485,11 +553,13 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         
         InputCDProcess = StartCoroutine(InputCoolDown());
 
-        //print("Trigger attack");
 
         // When start a new combo
-        if (referenceKeeper.PlayerData.CurrentCombo == EnumHolder.ComboCounter.Combo1)
-            ChangeAttackStyle(attackStyle);
+        if (referenceKeeper.PlayerData.CurrentCombo == EnumHolder.ComboCounter.Combo1 &&
+            !DurationFromAttackEndedToStateExitWhenComboEnded)
+        { 
+            ChangeAttackStyle(attackStyle); 
+        }
 
         // When outside the combo check range
         if (!ListenToMeleeAttack)
@@ -498,8 +568,8 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         }
         // When within the combo check range
         else
-        {
-            if(referenceKeeper.PlayerData.EnableSlowMoWhenCheckTheseCombo.Length != 0) ResetTimeScale();
+        {            
+            if (referenceKeeper.PlayerData.EnableSlowMoWhenCheckTheseCombo.Length != 0) ResetTimeScale();
             ComboHandling();
         }
     }
@@ -537,9 +607,10 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         referenceKeeper.PlayerData.CurrentCombo = 0;
         ChangeAttackStyle(EnumHolder.AttackStyle.None);
         AttackCDProcess = StartCoroutine(AttackCoolDown());
+
+        DurationFromAttackEndedToStateExitWhenComboEnded = true;
     }
     #endregion
-
     #region Camera
     public void ActivateCamera() {
         UserControllerGetter.Instance.MouseInputDelegate += CameraRotation;
@@ -559,6 +630,8 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     }
     private void CameraRotation(float horizontal, float vertical)
     {
+        if (referenceKeeper.PlayerData.m_LockOn) return;
+
         Vector2 input = new Vector2(horizontal, vertical);
 
         // if there is an input and camera position is not fixed
@@ -596,7 +669,6 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
 
     }
     #endregion
-
     #region Animation Event Section
     private void ComboCheckStart() {
         ListenToMeleeAttack = true;
@@ -627,7 +699,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
             EnableCombo = false;
         }
         else {
-            ResetComboCheckStatus();          
+            ResetComboCheckStatus();            
         }
         if (referenceKeeper.PlayerData.EnableSlowMoWhenCheckTheseCombo.Length != 0) ResetTimeScale();
     }
@@ -681,7 +753,6 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         if (vfx) { CurrentAttackVFX = vfx; vfx.Stop(true); vfx.Play(true); }
     }
     #endregion
-
     #region Damage Section
     private void CheckAttackEnemySuccess(Collider target) { 
         IDamagable damagableTarget = target.GetComponentInParent<IDamagable>();
@@ -725,6 +796,8 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
                 break;
         }
 
+        TimeManager.Instance.StartTimeEvent(comboDetailList.AttackFeedback.ToString());
+
         damagableTarget.OnReceiveDamage(
             comboDetailList.DamageAmount,
             comboDetailList.PushDistance,
@@ -734,16 +807,18 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         
         if (!AttackSuccess)
         {
-            referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.ReflectName);
+            ReflectByShield(target);
         }
     }
     private void PlayHitVFX(Collider target)
     {
-        var cloneHitVFX = Instantiate(referenceKeeper.PlayerData.HitVFX, target.ClosestPoint(referenceKeeper.PlayerData.HitVFXTrigger.transform.position), Quaternion.identity, target.transform);
-        Destroy(cloneHitVFX, 2f);
+        if (AttackSuccess)
+        {
+            var cloneHitVFX = Instantiate(referenceKeeper.PlayerData.HitVFX, target.ClosestPoint(referenceKeeper.PlayerData.HitVFXTrigger.transform.position), Quaternion.identity, target.transform);
+            Destroy(cloneHitVFX, 2f);
+        }
     }
     #endregion
-
     #region Attack Assistance
     private void ChangeTarget(float horizontal, float vertical)
     {
@@ -751,7 +826,10 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         if (referenceKeeper.PlayerData.SwitchTargetCD) return;
 
         SearchTarget();
-        ChangeLockTarget();
+
+        if (CurrentEnemies.Count <= 1) return;
+
+        ChangeLockTarget();                
         SwitchToNextTarget(horizontal, vertical);
     }
     private Collider SearchTarget() {
@@ -897,34 +975,38 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
             if (LockOnProcess != null)
                 StopCoroutine(LockOnProcess);
 
-            LockOnProcess = StartCoroutine(LockOnTarget(referenceKeeper.PlayerData.CharacterController.transform));            
+            LockOnProcess = StartCoroutine(LockOnTarget(referenceKeeper.PlayerData.CharacterController.transform));
+            referenceKeeper.AnimationPlayer.SetFloat(referenceKeeper.PlayerData.LockOnName, 1, referenceKeeper.PlayerData.LockOnAnimatorTrasitionDuration);
         }
         else 
         {
             referenceKeeper.PlayerData.m_LockOn = false;
 
-            ChangeTargetCollider(null);
-
-            var rot = referenceKeeper.PlayerData.CinemachineCameraTarget.transform.localEulerAngles;
+            var rot = referenceKeeper.PlayerData.CinemachineCameraTarget.transform.eulerAngles;
 
             if (LockOnProcess != null)
                 StopCoroutine(LockOnProcess);
 
-            _cinemachineTargetPitch = rot.x - referenceKeeper.PlayerData.CameraAngleOverride;
+            ChangeTargetCollider(null);
+
+            _cinemachineTargetPitch = rot.x + referenceKeeper.PlayerData.CameraAngleOverride;
             _cinemachineTargetYaw = rot.y;
 
-            referenceKeeper.PlayerData.CinemachineCameraTarget.transform.rotation = 
-                Quaternion.Euler(
-                    _cinemachineTargetPitch + referenceKeeper.PlayerData.CameraAngleOverride, 
-                    _cinemachineTargetYaw, 
-                    0.0f);
-            
-            DeactivateSwitchTarget();
+            //DOTween.To(
+            //    () => referenceKeeper.PlayerData.CinemachineCameraTarget.transform.eulerAngles,
+            //    x => referenceKeeper.PlayerData.CinemachineCameraTarget.transform.eulerAngles = x,
+            //    rot, .3f);
+
+            if (_cinemachineTargetPitch > referenceKeeper.PlayerData.TopClamp) _cinemachineTargetPitch -= 360;
+            if (_cinemachineTargetPitch < referenceKeeper.PlayerData.BottomClamp) _cinemachineTargetPitch += 360;
+           
             ActivateCamera();
+            DeactivateSwitchTarget();
 
             EventHandler.WhenUnlockTarget?.Invoke();
+            referenceKeeper.AnimationPlayer.SetFloat(referenceKeeper.PlayerData.LockOnName, 0, referenceKeeper.PlayerData.LockOnAnimatorTrasitionDuration);
         }        
-    }
+    }    
     private void ChangeLockTarget() {
         if (LockOnProcess != null)
             StopCoroutine(LockOnProcess);
@@ -937,25 +1019,32 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         Vector3 dir;
         Quaternion targetRot;
         float step = 0;
-
-        while (step < .5f)
+        var from = referenceKeeper.PlayerData.CinemachineCameraTarget.transform.rotation;
+        while (step < 1)
         {
             dir = targetCollider.transform.position - new Vector3(player.position.x, player.position.y - referenceKeeper.PlayerData.LockOnPitchOffset, player.position.z);
             dir = dir.normalized;
 
             targetRot = Quaternion.LookRotation(dir);
             step += Time.deltaTime * referenceKeeper.PlayerData.LockOnCamTransitionSpeed;
-            referenceKeeper.PlayerData.CinemachineCameraTarget.transform.rotation = Quaternion.Slerp(referenceKeeper.PlayerData.CinemachineCameraTarget.transform.rotation, targetRot, step);
+            referenceKeeper.PlayerData.CinemachineCameraTarget.transform.rotation = Quaternion.Lerp(from, targetRot, step);
 
             yield return null;
-        }        
-        
+        }
+
+        var rot = referenceKeeper.PlayerData.CinemachineCameraTarget.transform.localEulerAngles;
+
         while (Vector3.Distance(targetCollider.transform.position, referenceKeeper.PlayerData.CharacterController.transform.position) < referenceKeeper.PlayerData.SearchRadius)
         {            
             dir = targetCollider.transform.position - new Vector3(player.position.x, player.position.y - referenceKeeper.PlayerData.LockOnPitchOffset, player.position.z);
-            dir = dir.normalized;          
+            dir = dir.normalized;
+            
+            rot = referenceKeeper.PlayerData.CinemachineCameraTarget.transform.localEulerAngles;
 
             referenceKeeper.PlayerData.CinemachineCameraTarget.transform.rotation = Quaternion.LookRotation(dir);
+            
+            _cinemachineTargetPitch = rot.x + referenceKeeper.PlayerData.CameraAngleOverride;
+            _cinemachineTargetYaw = rot.y;
 
             yield return null;
         }
@@ -963,7 +1052,6 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         LockOnTarget();
     }
     #endregion
-
     #region Hit    
     public void OnReceiveDamage(float damageAmount, float pushBackDistance, float duration, AnimationCurve movement, Transform attacker)
     {
@@ -973,6 +1061,16 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         OnHealthPercentageChanged(HealthPercentage);
         CharacterFacingEnemy(referenceKeeper.PlayerData.FacingEnemySpeed);
         SetAnimatorTrigger(referenceKeeper.PlayerData.HitKnockbackName);
+
+        StartCoroutine(CombatCoroutines.CharacterControllerPositionLerping(attacker, referenceKeeper.PlayerData.CharacterController, pushBackDistance, duration, movement));
+    }
+    public void ReflectByShield(Collider target) {
+        //referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.ReflectName);
+        WhenGetDamage?.Invoke(); 
+        EventHandler.WhenHitShield?.Invoke(target.ClosestPoint(referenceKeeper.PlayerData.HitVFXTrigger.transform.position), Quaternion.identity);
+        TimeManager.Instance.StartTimeEvent("HitShield");
+        SetAnimatorTrigger(referenceKeeper.PlayerData.ReflectName);
+        //referenceKeeper.AnimationPlayer.HitShield();
     }
     #endregion
     #region Heal
@@ -1065,7 +1163,21 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     private void SetAnimatorTrigger(string name) {
         referenceKeeper.AnimationPlayer.AnimatorRef.SetTrigger(name);    
     }
-    
+
+    #region SMB Event
+    public void OnStateExit(int damageTriggerIndex)
+    {
+        TurnOffDamageTrigger(damageTriggerIndex);
+
+        AttackSuccess = true;
+        HitTrigger.enabled = true;
+
+        // Animation Ended
+        DurationFromAttackEndedToStateExitWhenComboEnded = false;
+        OnAttackStateExitDel?.Invoke();
+    }
+    #endregion
+
     private void OnDrawGizmos()
     {
         if (referenceKeeper == null) return;
@@ -1074,20 +1186,10 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
 
         //Debug.DrawLine(transform.position, transform.position + transform.up * referenceKeeper.PlayerData.JumpHight);
 
-        //Gizmos.DrawWireSphere(referenceKeeper.PlayerData.CharacterController.transform.position, referenceKeeper.PlayerData.CheckGroundedSphereRadius);
+        Gizmos.DrawWireSphere(referenceKeeper.PlayerData.CharacterController.transform.position, referenceKeeper.PlayerData.CheckGroundedSphereRadius);
 
         //Gizmos.color = new Color(1,0,0,.3f);
 
         //Gizmos.DrawSphere(referenceKeeper.PlayerData.CharacterController.transform.position, referenceKeeper.PlayerData.SearchRadius);
     }
-    #region SMB Event
-    public void OnStateExit(int damageTriggerIndex)
-    {
-        TurnOffDamageTrigger(damageTriggerIndex);
-
-        AttackSuccess = true;
-        HitTrigger.enabled = true;
-        //AttackEnded();
-    }
-    #endregion
 }

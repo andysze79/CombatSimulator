@@ -4,12 +4,16 @@ using UnityEngine;
 
 public class MeleeAnimatorState : StateMachineBehaviour
 {
+    public string[] m_ResetWhenEnterTriggerName;
     public string[] m_TriggerName;
     // OnStateEnter is called before OnStateEnter is called on any state inside this state machine
-    //override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
-    //{
-    //    
-    //}
+    override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        for (int i = 0; i < m_ResetWhenEnterTriggerName.Length; i++)
+        {
+            animator.ResetTrigger(m_ResetWhenEnterTriggerName[i]);
+        }
+    }
 
     // OnStateUpdate is called before OnStateUpdate is called on any state inside this state machine
     //override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
