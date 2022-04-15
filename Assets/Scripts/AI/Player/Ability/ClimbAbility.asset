@@ -19,10 +19,15 @@ MonoBehaviour:
   ActiveInputAngle: 30
   MountSpeed: 10
   FacingCliffDuration: 0.3
-  LandingDuration: 1.5
+  StartTraverseDistanceBetweenCurrentToEnd: 0.5
+  LandingDuration: 2.15
   ClimbDistance: 1
-  ClimbDuration: 0.3
+  ClimbDuration: 1.3
+  ClimbUpDistance: 14
   offset: {x: 0, y: 0, z: 0}
-  InputMagnitude: 0.8598654
+  InputMagnitude: 0.9127732
   edgeBox: {fileID: 0}
   changeEdgeBox: 0
+  edgeDetectTriggers: []
+  ControllerSpeed: {x: 0, y: 0, z: 0}
+  JumpSpeed: {x: 0, y: 0, z: 0}

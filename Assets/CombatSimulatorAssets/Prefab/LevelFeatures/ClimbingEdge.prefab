@@ -96,7 +96,7 @@ GameObject:
   - component: {fileID: 2813786943756804816}
   - component: {fileID: 2813786943756804831}
   - component: {fileID: 2813786943756804820}
-  m_Layer: 9
+  m_Layer: 0
   m_Name: ClimbingEdge
   m_TagString: ClimbEdge
   m_Icon: {fileID: 0}
@@ -426,3 +426,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   LandingPointOffset: {x: 0, y: 0, z: -0.52}
   testObj: {fileID: 0}
+  testInput: {x: 0, y: 0, z: 0}
+  m_ViewClimbPoint: 0
+  m_ViewLandPoint: 0

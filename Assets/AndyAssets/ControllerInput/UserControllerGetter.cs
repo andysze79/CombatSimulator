@@ -8,6 +8,27 @@ public enum ControllerInput{
 
 public class UserControllerGetter : MonoBehaviour
 {
+    public enum ControllerDelegat {
+    MouseInputDelegate,
+    Joystick1InputDelegate,
+    RunDownDelegate,
+    RunUpDelegate,
+    JumpDownDelegate,
+    JumpUpDelegate,
+    DashDownDelegate,
+    DashUpDelegate,
+    GuardDownDelegate,
+    GuardUpDelegate,
+    LockOnDownDelegate,
+    LockOnUpDelegate,
+    Fight1DownDelegate,
+    Fight1UpDelegate,    
+    Fight2DownDelegate,
+    Fight2UpDelegate,    
+    Fight3DownDelegate,
+    Fight3UpDelegate,
+    Fight3Delegate
+    }
     public enum Controller {
         Keyboard
     }

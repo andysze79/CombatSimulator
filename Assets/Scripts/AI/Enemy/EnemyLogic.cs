@@ -32,7 +32,7 @@ namespace CombateSimulator.EnemyAI
             {
                 if (referenceKeeper.EnemyStateController.chaseTarget.TryGetComponent<Collider>(out Collider col))
                 {
-                    print(col.name);
+                    //print(col.name);
                     return col.ClosestPoint(transform.position); 
                 }
                 else

@@ -25,7 +25,7 @@ public class ClimbableObject : MonoBehaviour
 
         GetClimbPoint(testObj.position);
         GetLandPoint();
-        //MoveClimbPoint(testInput, 1);
+        MoveClimbPoint(testInput, 1);
     }
     public Vector3 GetClimbPoint(Vector3 colPos) {
         colPos.y = boxCol.transform.position.y;
@@ -39,8 +39,7 @@ public class ClimbableObject : MonoBehaviour
         if(m_ViewClimbPoint) DrawSphere(pos);
 
         return pos;
-    }
-    
+    }    
     public Vector3 MoveClimbPoint(Vector3 controllerInput, float dist)
     {
         Debug.DrawRay(pos, controllerInput.normalized, Color.red);
@@ -48,6 +47,7 @@ public class ClimbableObject : MonoBehaviour
         var vec1 = controllerInput;
         var vec2 = boxCol.transform.forward;
         var angle = (Mathf.PI / 180) * Vector3.Angle(vec1, vec2);
+        //dist = Mathf.Clamp(dist + Vector3.Distance(pos, boxCol.transform.position), -boxCol.size.z / 2, boxCol.size.z / 2) - Vector3.Distance(pos, boxCol.transform.position); 
         var nextPos = pos + boxCol.transform.forward * (Mathf.Cos(angle)/Mathf.Abs(Mathf.Cos(angle)) * dist);
         nextPos = GetClimbPoint(nextPos);
 
@@ -64,6 +64,7 @@ public class ClimbableObject : MonoBehaviour
         sphere.transform.position = pos;
         if (debugSphere != null) Destroy(debugSphere);
         debugSphere = sphere;
+        //Destroy(debugSphere, 3);
     }
     private void OnDrawGizmos()
     {

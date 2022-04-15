@@ -36,7 +36,9 @@ public class PlayerDataHolder : MonoBehaviour
     [SerializeField] private float m_isInAirDistance;
     [SerializeField] private float m_JumpHight;
     [SerializeField] private float m_JumpGravityMultiplier = 2f;
-    [SerializeField] private float m_JumpCDTime;    
+    [SerializeField] private float m_JumpCDTime;
+    [SerializeField] private float m_CheckGroundedOffset = .5f;
+    [SerializeField] private float m_CheckGroundedDist = .15f;
     [Header("Dash State")]
     [SerializeField] private float m_DashForce;    
     [SerializeField] private float m_DashDuration;  
@@ -68,6 +70,10 @@ public class PlayerDataHolder : MonoBehaviour
     [SerializeField] private string m_isGroundedName;
     [FoldoutGroup("Animator Trigger Name")]
     [SerializeField] private string m_isInAirName;
+    [FoldoutGroup("Animator Trigger Name")]
+    [SerializeField] private string m_isClimbingName;
+    [FoldoutGroup("Animator Trigger Name")]
+    [SerializeField] private string m_CrounchUpName;
     [FoldoutGroup("Animator Trigger Name")]
     [SerializeField] private string m_Melee1Name;
     [FoldoutGroup("Animator Trigger Name")]
@@ -172,6 +178,8 @@ public class PlayerDataHolder : MonoBehaviour
     public float JumpHight { get { return m_JumpHight; } }    
     public float JumpGravityMultiplier { get {return m_JumpGravityMultiplier; } }
     public float JumpCDTime { get {return m_JumpCDTime; } }
+    public float CheckGroundedOffset { get { return m_CheckGroundedOffset; } }
+    public float CheckGroundedDist { get { return m_CheckGroundedDist; } }
     public float DashForce { get {return m_DashForce; } }
     public float DashDuration { get {return m_DashDuration; } }
     public AnimationCurve DashMovement { get {return m_DashMovement; } }
@@ -197,6 +205,8 @@ public class PlayerDataHolder : MonoBehaviour
     public string JumpName { get { return m_JumpName; } }
     public string isGroundedName { get { return m_isGroundedName; } }
     public string isInAirName { get { return m_isInAirName; } }
+    public string isClimbingName { get { return m_isClimbingName; } }
+    public string CrounchUpName { get { return m_CrounchUpName; } }
     public string Melee1Name { get { return m_Melee1Name; } }
     public string Melee2Name { get { return m_Melee2Name; } }
     public string Melee3Name { get { return m_Melee3Name; } }

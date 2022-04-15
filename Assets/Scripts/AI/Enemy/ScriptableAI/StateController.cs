@@ -18,6 +18,7 @@ public class StateController : MonoBehaviour
     [ReadOnly] [FoldoutGroup("Debug")] public EnemyLogic enemyLogic;
     [ReadOnly] [FoldoutGroup("Debug")] public float stateTimeElapsed;
     [ReadOnly] [FoldoutGroup("Debug")] public Transform chaseTarget;
+    [SerializeField] private bool m_DebugMode = false;
     [HideInInspector] public NavMeshAgent navMeshAgent;
     [HideInInspector] public Animator animator;
     /*[HideInInspector] */
@@ -87,7 +88,7 @@ public class StateController : MonoBehaviour
     {
         if (nextState != remainState)
         {
-            print(nextState);
+            if(m_DebugMode) print(nextState);
             previousState = currentState;
             currentState = nextState;
             previousState.ExitState(this);

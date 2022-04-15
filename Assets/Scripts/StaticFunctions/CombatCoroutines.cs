@@ -158,7 +158,7 @@ public static class CombatCoroutines
         ai.enabled = true;
         ai.isStopped = false;
     }
-    private static bool CheckHitWall(Transform obj, Vector3 offset, float dist, LayerMask layer) {
+    public static bool CheckHitWall(Transform obj, Vector3 offset, float dist, LayerMask layer) {
         Ray ray = new Ray();
         ray.origin = obj.position + offset;
         ray.direction = obj.forward;

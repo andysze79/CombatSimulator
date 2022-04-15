@@ -7,6 +7,7 @@ using DG.Tweening;
 
 public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagable, IHealthBehavior, IAnimationEvent
 {
+    #region Variables
     public bool m_ConnectWithStateMachine;
     [ReadOnly] [SerializeField] private bool EnableCombo;
     [ReadOnly] [SerializeField] private bool ListenToMeleeAttack;
@@ -34,7 +35,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     [ReadOnly] [SerializeField] private float buttonDownTimer;
     [ReadOnly] [SerializeField] private bool isCharge = false;
     Coroutine checkButtonDownProcess;
-    Coroutine jumpProcess;
+    public Coroutine jumpProcess;
     EnumHolder.AttackStyle previousAttackStyle;
     EnumHolder.AttackStyle deriveToThisStyle;
     private float _rotationVelocity;
@@ -72,7 +73,8 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     [ShowInInspector]private bool AttackSuccess = true;// { get; set; }
     private float currentMoveSpeed { get; set; }
     private bool isJumping { get; set; }
-    
+    public bool stopCheckGrounded { get; set; }
+    #endregion
     private void OnEnable()
     {
         referenceKeeper = GetComponent<ReferenceKeeper>();        
@@ -211,7 +213,6 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     public void ActivateMove() {
         UserControllerGetter.Instance.Joystick1InputDelegate += CheckMove;
         ActivateRotate();    
-        UserControllerGetter.Instance.Joystick1InputDelegate += SetAnimatorFloat;
 
         UserControllerGetter.Instance.JumpDownDelegate += CheckJump;
         UserControllerGetter.Instance.JumpUpDelegate += CheckFinishedJump;
@@ -221,8 +222,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     }
     public void DeactivateMove() {        
         UserControllerGetter.Instance.Joystick1InputDelegate -= CheckMove;
-        DeactivateRotate();      
-        UserControllerGetter.Instance.Joystick1InputDelegate -= SetAnimatorFloat;        
+        DeactivateRotate();             
 
         UserControllerGetter.Instance.JumpDownDelegate -= CheckJump;
         UserControllerGetter.Instance.JumpUpDelegate -= CheckFinishedJump;
@@ -236,10 +236,11 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
 
         moveValue = new Vector3(horizontal, 0, vertical);
 
-        var ChangeToCameraAlginment = Quaternion.AngleAxis(Camera.main.transform.eulerAngles.y, Vector3.up);
+        var ChangeToCameraAlginment = Quaternion.AngleAxis(referenceKeeper.PlayerData._3rdPersonCamera.transform.eulerAngles.y, Vector3.up);
                 
         moveValue = ChangeToCameraAlginment * moveValue;
         moveValueRaw = moveValue;
+        SetAnimatorFloat(moveValue.x, moveValue.z);
         moveValue = moveValue * Time.deltaTime * currentMoveSpeed;
 
         // Gravity
@@ -253,7 +254,6 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     }
     public void ApplyGravity()
     {
-        //moveValue = Vector3.zero;
         moveValue.y = referenceKeeper.PlayerData.Gravity * Time.deltaTime;
     }
     private void CheckRun() {
@@ -274,7 +274,10 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         var targetDir = ChangeToCameraAlginment * moveDir;
 
         if (targetCollider && referenceKeeper.PlayerData.m_LockOn)
+        { 
             targetDir = (targetCollider.transform.position - referenceKeeper.PlayerData.CharacterController.transform.position).normalized;
+            targetDir.y = 0;
+        }
 
         var newRot = Quaternion.LookRotation(targetDir);
 
@@ -287,10 +290,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
             newRot,
             Time.deltaTime * referenceKeeper.PlayerData.RotateSpeed * ratio);
     }
-    private void SetAnimatorFloat(float horizontal, float vertical) {
-        referenceKeeper.AnimationPlayer.AnimatorRef.SetFloat(referenceKeeper.PlayerData.RunHorizontalName, horizontal);
-        referenceKeeper.AnimationPlayer.AnimatorRef.SetFloat(referenceKeeper.PlayerData.RunVerticalName, vertical);
-    }
+    
     public void CharacterFacingEnemy(float facingSpeed) {
         if (targetCollider == null) return;
 
@@ -306,12 +306,39 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     }
 
     #region Jump
-
     public bool CheckGrounded() {
-        return Physics.CheckSphere(
-            referenceKeeper.PlayerData.CharacterController.transform.position, 
-            referenceKeeper.PlayerData.CheckGroundedSphereRadius,
-            referenceKeeper.PlayerData.CheckGroundedLayer);        
+        if(stopCheckGrounded) return false;
+
+        RaycastHit[] hitInfo = new RaycastHit[3];
+
+        int colAmount = Physics.SphereCastNonAlloc(
+        referenceKeeper.PlayerData.CharacterController.transform.position + Vector3.up * referenceKeeper.PlayerData.CheckGroundedOffset,
+        referenceKeeper.PlayerData.CheckGroundedSphereRadius,
+        Vector3.down,
+        hitInfo,
+        referenceKeeper.PlayerData.CheckGroundedOffset + referenceKeeper.PlayerData.CheckGroundedDist,
+        referenceKeeper.PlayerData.CheckGroundedLayer);
+                
+        if(colAmount != 0) return CheckSliding(hitInfo);
+
+        return false;
+    }
+    private bool CheckSliding(RaycastHit[] hitInfo) {
+        for (int i = 0; i < hitInfo.Length; i++)
+        {
+            if (hitInfo[i].collider == null) continue;
+
+            //print(hitInfo[i].collider.name + " " + Vector3.Angle(Vector3.up, hitInfo[i].normal));
+                                  
+            if (Vector3.Angle(Vector3.up, hitInfo[i].normal) >= 45)
+            {
+                var speed = referenceKeeper.PlayerData.Gravity;
+                float dot = Vector3.Dot(moveValue,hitInfo[i].normal);
+                moveValue = (moveValue - hitInfo[i].normal * dot).normalized * speed;
+                return false; 
+            }
+        }
+        return true;
     }
     public bool CheckisInAir()
     {
@@ -328,33 +355,41 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     {
         if (!CheckGrounded() || referenceKeeper.PlayerData.JumpCD) return;
 
+        Jump(referenceKeeper.PlayerData.JumpHight, false);
+    }
+    public void Jump(float jumpHight, bool ignoreCheckGrounded) {
         isJumping = true;
 
         if (jumpProcess != null)
             StopCoroutine(jumpProcess);
 
-        jumpProcess = StartCoroutine(JumpProcess());
+        jumpProcess = StartCoroutine(JumpProcess(jumpHight, ignoreCheckGrounded));
 
         SetAnimatorTrigger(referenceKeeper.PlayerData.JumpName);
-
-        referenceKeeper.PlayerData.JumpCD = true;
-
     }
     private void CheckFinishedJump() {
         isJumping = false;
     }
-    private IEnumerator JumpProcess()
+    public Vector3 PlayerSpeed;
+    public Vector3 JumpSpeed;
+    private IEnumerator JumpProcess(float jumpHight, bool ignoreCheckGrounded)
     {        
         var startTime = Time.time;
-        var velocity = Mathf.Sqrt(referenceKeeper.PlayerData.JumpHight * -2f * referenceKeeper.PlayerData.Gravity * referenceKeeper.PlayerData.JumpGravityMultiplier);
-
+        // v0 ^ 2 = -2gh 
+        var velocity = Mathf.Sqrt(-2f * referenceKeeper.PlayerData.Gravity * referenceKeeper.PlayerData.JumpGravityMultiplier * jumpHight);
+        var currentVelocity = referenceKeeper.PlayerData.CharacterController.velocity;
         while (true)
-        {
+        {            
             velocity += referenceKeeper.PlayerData.Gravity * referenceKeeper.PlayerData.JumpGravityMultiplier * Time.deltaTime;
-            referenceKeeper.PlayerData.CharacterController.Move(new Vector3(0,velocity,0) * Time.deltaTime);
+            referenceKeeper.PlayerData.CharacterController.Move(new Vector3(0, velocity, 0) * Time.deltaTime);
+            JumpSpeed.y = velocity;
+            PlayerSpeed = referenceKeeper.PlayerData.CharacterController.velocity;
 
-            if (startTime > .5f && CheckGrounded()) break;
-
+            if (!ignoreCheckGrounded)
+            {
+                if (startTime > .5f && CheckGrounded()) break;
+            }
+            
             yield return null;
         }
 
@@ -394,7 +429,6 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     #endregion
 
     #endregion
-
     #region Guard
     public void ActivateGuard()
     {
@@ -475,7 +509,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
                     referenceKeeper.PlayerData.CurrentCombo = referenceKeeper.PlayerData.Melee1ToMelee2[1];
                     ChangeAttackStyle(EnumHolder.AttackStyle.Melee2);
                     referenceKeeper.AnimationPlayer.PlayAnimation(referenceKeeper.PlayerData.Combo1Name);
-                    print("from 1 to 2");
+                    //print("from 1 to 2");
                 }
                 else { 
                     deriveToThisStyle = EnumHolder.AttackStyle.Melee2;                    
@@ -504,7 +538,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
 
         if (result) 
         {
-            print("Derive " + referenceKeeper.PlayerData.CurrentCombo);
+            //print("Derive " + referenceKeeper.PlayerData.CurrentCombo);
         }
 
         return result;
@@ -539,6 +573,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     private void SearchEnemyContinuously() {
         var result = SearchTarget();
         if (result) ChangeTargetCollider(result);
+        else EventHandler.WhenNoTarget?.Invoke();
     }
     public void TriggerAttack(EnumHolder.AttackStyle attackStyle, string AnimatorTriggerName, EnumHolder.ComboCounter lastCombo) {
 
@@ -663,7 +698,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
                 ref _rotationVelocity, 
                 referenceKeeper.PlayerData.RotationSmoothTime);
 
-            // rotate to face input direction relative to camera position
+            // rotate to face input direction relative to camera position            
             referenceKeeper.PlayerData.CharacterController.transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
         }
 
@@ -691,7 +726,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
 
         if (EnableCombo)        
         {
-            SetAnimationTrigger();
+            SetAnimatorTrigger();
 
             // Chain to next combo
             ++referenceKeeper.PlayerData.CurrentCombo;
@@ -824,7 +859,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     {
         if (horizontal > -.5f && horizontal < .5 && vertical > -.5 && vertical < .5) return;
         if (referenceKeeper.PlayerData.SwitchTargetCD) return;
-
+        
         SearchTarget();
 
         if (CurrentEnemies.Count <= 1) return;
@@ -933,7 +968,10 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         {
             if (SortedTarget[i] == targetCollider) {
                 if (i - 1 >= 0)
-                    ChangeTargetCollider(SortedTarget[i - 1]);
+                { 
+                    ChangeTargetCollider(SortedTarget[i - 1]); 
+                    EventHandler.WhenLockOnTarget?.Invoke(SortedTarget[i - 1].transform); 
+                }
             }
         }
     }
@@ -941,7 +979,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         targetCollider = newTarget;
 
         if(targetCollider != null)
-            EventHandler.WhenLockOnTarget?.Invoke(targetCollider.transform);
+            EventHandler.WhenAutoAimTarget?.Invoke(targetCollider.transform);
     }
     public void ActivateLockOnTarget()
     {
@@ -967,6 +1005,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
             
             ChangeTargetCollider(target);
 
+            EventHandler.WhenLockOnTarget?.Invoke(target.transform);
             referenceKeeper.PlayerData.m_LockOn = true;
                         
             DeactivateCamera();
@@ -1097,10 +1136,10 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         referenceKeeper.PlayerData.InputCD = false;
     }
     private IEnumerator JumpCoolDown()
-    {
+    {        
         referenceKeeper.PlayerData.JumpCD = true;
         yield return new WaitForSeconds(referenceKeeper.PlayerData.JumpCDTime);
-        referenceKeeper.PlayerData.JumpCD = false;
+        referenceKeeper.PlayerData.JumpCD = false;        
     }
     private IEnumerator DashCoolDown()
     {
@@ -1115,7 +1154,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
         referenceKeeper.PlayerData.SwitchTargetCD = false;
     }
     #endregion
-
+    #region Time Control
     private void SlowDownComboTime() {
         for (int i = 0; i < referenceKeeper.PlayerData.EnableSlowMoWhenCheckTheseCombo.Length; i++)
         {
@@ -1128,7 +1167,14 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     private void ResetTimeScale() {
         TimeManager.Instance.ResetTimeScale();
     }
-    private void SetAnimationTrigger() {        
+    #endregion
+    #region Animator Settings
+    private void SetAnimatorFloat(float horizontal, float vertical)
+    {
+        referenceKeeper.AnimationPlayer.AnimatorRef.SetFloat(referenceKeeper.PlayerData.RunHorizontalName, horizontal);
+        referenceKeeper.AnimationPlayer.AnimatorRef.SetFloat(referenceKeeper.PlayerData.RunVerticalName, vertical);
+    }
+    private void SetAnimatorTrigger() {        
         switch (referenceKeeper.PlayerData.CurrentCombo)
         {
             case EnumHolder.ComboCounter.Combo1:
@@ -1163,7 +1209,7 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     private void SetAnimatorTrigger(string name) {
         referenceKeeper.AnimationPlayer.AnimatorRef.SetTrigger(name);    
     }
-
+    #endregion
     #region SMB Event
     public void OnStateExit(int damageTriggerIndex)
     {
@@ -1182,11 +1228,11 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
     {
         if (referenceKeeper == null) return;
 
-        //Gizmos.color = Color.red;
-
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(referenceKeeper.PlayerData.CharacterController.transform.position + Vector3.up * referenceKeeper.PlayerData.CheckGroundedOffset, referenceKeeper.PlayerData.CheckGroundedSphereRadius);
+        Gizmos.DrawSphere(referenceKeeper.PlayerData.CharacterController.transform.position - Vector3.up * referenceKeeper.PlayerData.CheckGroundedDist, referenceKeeper.PlayerData.CheckGroundedSphereRadius);
+        
         //Debug.DrawLine(transform.position, transform.position + transform.up * referenceKeeper.PlayerData.JumpHight);
-
-        Gizmos.DrawWireSphere(referenceKeeper.PlayerData.CharacterController.transform.position, referenceKeeper.PlayerData.CheckGroundedSphereRadius);
 
         //Gizmos.color = new Color(1,0,0,.3f);
 

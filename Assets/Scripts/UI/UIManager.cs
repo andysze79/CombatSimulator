@@ -17,6 +17,7 @@ public class UIManager : MonoBehaviour
     }
     
     public Image m_TargetRadical;
+    public Image m_LockOnRadical;
     public float m_TargetRadicalYOffsetRate = 1.2f;
     public Camera MainCamera { get; set; }
     public HealthbarController HealthbarController { get; set; }
@@ -25,15 +26,27 @@ public class UIManager : MonoBehaviour
     {   
         MainCamera = Camera.main;
         HealthbarController = GetComponent<HealthbarController>();
-        EventHandler.WhenLockOnTarget += ShowTargetSign;
-        EventHandler.WhenUnlockTarget += HideTargetSign;
+        EventHandler.WhenAutoAimTarget += ShowTargetSign;
+        EventHandler.WhenLockOnTarget += ShowLockOnSign;
+        EventHandler.WhenNoTarget += HideTargetSign;
+        EventHandler.WhenUnlockTarget += HideLockOnSign;
     }
     private void OnDisable()
     {
-        EventHandler.WhenLockOnTarget -= ShowTargetSign;        
-        EventHandler.WhenUnlockTarget -= HideTargetSign;        
+        EventHandler.WhenAutoAimTarget -= ShowTargetSign;
+        EventHandler.WhenLockOnTarget -= ShowLockOnSign;        
+        EventHandler.WhenNoTarget -= HideTargetSign;
+        EventHandler.WhenUnlockTarget -= HideLockOnSign;        
     }
-    private void ShowTargetSign(Transform target) {
+    private void ShowLockOnSign(Transform target) {
+        m_LockOnRadical.gameObject.SetActive(true);
+    }
+    private void HideLockOnSign()
+    {
+        m_LockOnRadical.gameObject.SetActive(false);
+    }
+    private void ShowTargetSign(Transform target)
+    {
         if (StickTargetSignProcess != null)
             StopCoroutine(StickTargetSignProcess);
 

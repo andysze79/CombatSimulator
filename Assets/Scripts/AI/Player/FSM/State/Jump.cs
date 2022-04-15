@@ -35,7 +35,7 @@ namespace CombateSimulator.PlayerFSM
             
         }
         protected override void WhenReceiveJoystick1Input(float horizontal, float vertical)
-        {                
+        {            
             if (stateMachine.playerLogic.CheckGrounded())            
             {
                 if (Mathf.Abs(stateMachine.playerData.CharacterController.velocity.magnitude) == 0f)
