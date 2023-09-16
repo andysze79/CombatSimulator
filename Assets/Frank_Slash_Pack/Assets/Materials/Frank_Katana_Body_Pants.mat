@@ -25,7 +25,7 @@ Material:
   m_ShaderKeywords: _RIMLIGHTING
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
+  m_DoubleSidedGI: 1
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
@@ -93,7 +93,7 @@ Material:
     - _CameraFadeShadows: 0
     - _CameraFadingEnabled: 0
     - _CameraShadowFadeDist: 1
-    - _Cull: 2
+    - _Cull: 0
     - _Cutoff: 0.5
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
@@ -113,7 +113,7 @@ Material:
     - _FoldStencilOptions: 0
     - _FoldSurfaceDetailInputs: 1
     - _FoldSurfaceInputs: 1
-    - _FoldSurfaceOptions: 0
+    - _FoldSurfaceOptions: 1
     - _GItoAO: 10
     - _GItoAOBias: 0
     - _GeometricSpecularAA: 0
@@ -156,3 +156,4 @@ Material:
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 0}
     - _RimColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+  m_BuildTextureStacks: []

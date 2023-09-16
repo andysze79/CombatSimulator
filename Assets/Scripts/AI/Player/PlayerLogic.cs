@@ -351,11 +351,12 @@ public class PlayerLogic : MonoBehaviour, IMatchTarget, IMatchSurface, IDamagabl
 
         return Vector3.Distance(hitInfo.point, pos) >= referenceKeeper.PlayerData.isInAirDistance; 
     }
+    public bool ignoreCheckGrounded = true;
     private void CheckJump()
     {
         if (!CheckGrounded() || referenceKeeper.PlayerData.JumpCD) return;
 
-        Jump(referenceKeeper.PlayerData.JumpHight, false);
+        Jump(referenceKeeper.PlayerData.JumpHight, ignoreCheckGrounded);
     }
     public void Jump(float jumpHight, bool ignoreCheckGrounded) {
         isJumping = true;
